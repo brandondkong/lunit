@@ -357,12 +357,12 @@ A second parameter can be provided to specify a message that explains why the te
 const RUN_TESTS = false;
 
 class TestSum {
-    @Skip(RUN_TESTS) // This test case will be skipped
+    @Skip(RUN_TESTS) // This test case will be ran if RUN_TESTS is false
     public windowsOnlyTest() {
         // This test case will be skipped on Windows
     }
 
-    @Skip(() => !RUN_TESTS, "This test case is enabled because !RUN_TESTS is true")
+    @Skip(() => !RUN_TESTS, "This test case is disabled because  !RUN_TESTS is true, so it will be skipped")
     public disabledTest() {
         // This test case will be skipped
     }
