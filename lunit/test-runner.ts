@@ -109,7 +109,7 @@ export class TestRunner {
 				}
 				return true;
 			})
-			.sort((a, b) => (a.options.order ?? DEFAULT_ORDER) <= (b.options.order ?? DEFAULT_ORDER));
+			.sort((a, b) => (a.options.order ?? DEFAULT_ORDER) < (b.options.order ?? DEFAULT_ORDER));
 	}
 
 	private async runTestClass(
