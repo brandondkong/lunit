@@ -1,8 +1,8 @@
 import { MetadataKey } from "../shared/enums";
-import { BaseMetadata, Method } from "../shared/types";
+import { Method } from "../shared/types";
 
 export type Constructor<T = object> = new (...args: never[]) => T;
-export type TestClassInstance = Record<string, Callback>;
+export type TestClassInstance = object;
 export type TestClassConstructor = Constructor<TestClassInstance>;
 
 export type TestRunOptions = {
