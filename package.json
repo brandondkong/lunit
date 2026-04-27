@@ -7,6 +7,7 @@
 		"watch": "rbxtsc -w",
 		"prepublishOnly": "npm run build",
 		"package": "npm run build && npm pack && npm publish",
+		"test": "lune run ./scripts/test.luau",
 		"lint": "eslint",
 		"format": "prettier --write .",
 		"install-test": "npm run build && npm pack && mv rbxts-lunit-*.tgz test/rbxts-lunit.tgz && cd test && npm install rbx-lunit.tgz || move rbxts-lunit-*.tgz test\\rbxts-lunit.tgz && cd test && npm install rbxts-lunit.tgz",
