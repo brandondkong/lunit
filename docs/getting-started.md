@@ -21,23 +21,25 @@ npm install @rbxts/lunit
 Here's a simple example of how you can use `@rbxts/lunit` to write tests for your Roblox-TS projects:
 
 First, create your test file that contains your test cases:
+
 ```ts
 // ReplicatedStorage/Tests/TestSum.spec.ts
 import { Test, Assert } from "@rbxts/lunit";
 
 class TestSum {
-    @Test
-    public addsTwoNumbers() {
-        Assert.equals(1 + 1, 2);
-    }
+	@Test
+	public addsTwoNumbers() {
+		Assert.equals(1 + 1, 2);
+	}
 }
 
 export = TestSum;
 ```
 
 Next, create a test runner script that runs your test cases:
+
 ```ts
-// TestRunner.server.ts OR TestRunner.client.ts 
+// TestRunner.server.ts OR TestRunner.client.ts
 import { TestRunner } from "@rbxts/lunit";;
 
 const testRunner = new TestRunner([

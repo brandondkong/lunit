@@ -20,10 +20,10 @@ Here is an example of how you can use decorators to define test cases in Lunit:
 import { Test, Assert } from "@rbxts/lunit";
 
 class TestSum {
-    @Test
-    public addsTwoNumbers() {
-        Assert.equals(1 + 1, 2);
-    }
+	@Test
+	public addsTwoNumbers() {
+		Assert.equals(1 + 1, 2);
+	}
 }
 
 export = TestSum;
@@ -39,10 +39,10 @@ The `@Test` decorator is used to mark a function as a test case. Test cases are 
 
 ```ts
 class TestSum {
-    @Test
-    public addsTwoNumbers() {
-        Assert.equals(1 + 1, 2);
-    }
+	@Test
+	public addsTwoNumbers() {
+		Assert.equals(1 + 1, 2);
+	}
 }
 ```
 
@@ -52,15 +52,15 @@ The `@Before` decorator is used to mark a function that should be run before eac
 
 ```ts
 class TestSum {
-    @Before
-    public setUp() {
-        // Set up the test environment
-    }
+	@Before
+	public setUp() {
+		// Set up the test environment
+	}
 
-    @Test
-    public addsTwoNumbers() {
-        Assert.equals(1 + 1, 2);
-    }
+	@Test
+	public addsTwoNumbers() {
+		Assert.equals(1 + 1, 2);
+	}
 }
 ```
 
@@ -74,15 +74,15 @@ The `@BeforeEach` decorator is used to mark a function that should be run before
 
 ```ts
 class TestSum {
-    @BeforeEach
-    public setUp() {
-        // Set up the test environment
-    }
+	@BeforeEach
+	public setUp() {
+		// Set up the test environment
+	}
 
-    @Test
-    public addsTwoNumbers() {
-        Assert.equals(1 + 1, 2);
-    }
+	@Test
+	public addsTwoNumbers() {
+		Assert.equals(1 + 1, 2);
+	}
 }
 ```
 
@@ -94,15 +94,15 @@ The `@After` decorator is used to mark a function that should be run after each 
 
 ```ts
 class TestSum {
-    @After
-    public tearDown() {
-        // Clean up the test environment
-    }
+	@After
+	public tearDown() {
+		// Clean up the test environment
+	}
 
-    @Test
-    public addsTwoNumbers() {
-        Assert.equals(1 + 1, 2);
-    }
+	@Test
+	public addsTwoNumbers() {
+		Assert.equals(1 + 1, 2);
+	}
 }
 ```
 
@@ -116,15 +116,15 @@ The `@AfterEach` decorator is used to mark a function that should be run after e
 
 ```ts
 class TestSum {
-    @AfterEach
-    public tearDown() {
-        // Clean up the test environment
-    }
+	@AfterEach
+	public tearDown() {
+		// Clean up the test environment
+	}
 
-    @Test
-    public addsTwoNumbers() {
-        Assert.equals(1 + 1, 2);
-    }
+	@Test
+	public addsTwoNumbers() {
+		Assert.equals(1 + 1, 2);
+	}
 }
 ```
 
@@ -135,17 +135,16 @@ class TestSum {
 The `@BeforeAll` decorator is used to mark a function that should be run before all test cases in a test suite. This function is typically used to set up the test environment or perform any necessary setup tasks that only need to be done once.
 
 ```ts
-
 class TestSum {
-    @BeforeAll
-    public static setUpAll() {
-        // Set up the test environment
-    }
+	@BeforeAll
+	public static setUpAll() {
+		// Set up the test environment
+	}
 
-    @Test
-    public addsTwoNumbers() {
-        Assert.equals(1 + 1, 2);
-    }
+	@Test
+	public addsTwoNumbers() {
+		Assert.equals(1 + 1, 2);
+	}
 }
 ```
 
@@ -157,15 +156,15 @@ The `@AfterAll` decorator is used to mark a function that should be run after al
 
 ```ts
 class TestSum {
-    @AfterAll
-    public static tearDownAll() {
-        // Clean up the test environment
-    }
+	@AfterAll
+	public static tearDownAll() {
+		// Clean up the test environment
+	}
 
-    @Test
-    public addsTwoNumbers() {
-        Assert.equals(1 + 1, 2);
-    }
+	@Test
+	public addsTwoNumbers() {
+		Assert.equals(1 + 1, 2);
+	}
 }
 ```
 
@@ -179,15 +178,15 @@ This decorator takes an optional message parameter that can be used to provide a
 
 ```ts
 class TestSum {
-    @Disabled("This test case is disabled because it is not yet implemented")
-    public disabledTest() {
-        // This test case will not be run
-    }
+	@Disabled("This test case is disabled because it is not yet implemented")
+	public disabledTest() {
+		// This test case will not be run
+	}
 
-    @Test
-    public addsTwoNumbers() {
-        Assert.equals(1 + 1, 2);
-    }
+	@Test
+	public addsTwoNumbers() {
+		Assert.equals(1 + 1, 2);
+	}
 }
 ```
 
@@ -199,10 +198,10 @@ The `@DisplayName` decorator is used to provide a custom display name for a test
 
 ```ts
 class TestSum {
-    @DisplayName("Adding two numbers should return the sum")
-    public addsTwoNumbers() {
-        Assert.equals(1 + 1, 2);
-    }
+	@DisplayName("Adding two numbers should return the sum")
+	public addsTwoNumbers() {
+		Assert.equals(1 + 1, 2);
+	}
 }
 ```
 
@@ -216,10 +215,10 @@ This decorator takes a timeout value in milliseconds as a parameter.
 
 ```ts
 class TestSum {
-    @Timeout(1000)
-    public slowTest() {
-        // This test case will fail if it takes longer than 1 second to complete
-    }
+	@Timeout(1000)
+	public slowTest() {
+		// This test case will fail if it takes longer than 1 second to complete
+	}
 }
 ```
 
@@ -231,11 +230,11 @@ The `@Negated` decorator is used to flip the result of a test case. If the test 
 
 ```ts
 class TestSum {
-    @Test
-    @Negated
-    public notEquals() {
-        Assert.notEquals(1 + 1, 3);
-    } // This test case will pass 
+	@Test
+	@Negated
+	public notEquals() {
+		Assert.notEquals(1 + 1, 3);
+	} // This test case will pass
 }
 ```
 
@@ -245,12 +244,12 @@ For example, you can use the `@Negated` decorator to create a test case that sho
 
 ```ts
 class TestSum {
-    @Test
-    @Timeout(1000)
-    @Negated
-    public slowTest() {
-        // This test case will pass if it takes longer than 1 second to complete
-    }
+	@Test
+	@Timeout(1000)
+	@Negated
+	public slowTest() {
+		// This test case will pass if it takes longer than 1 second to complete
+	}
 }
 ```
 
@@ -264,10 +263,10 @@ This decorator takes one or more tag names as parameters.
 
 ```ts
 class TestSum {
-    @Tag("math", "addition")
-    public addsTwoNumbers() {
-        Assert.equals(1 + 1, 2);
-    }
+	@Tag("math", "addition")
+	public addsTwoNumbers() {
+		Assert.equals(1 + 1, 2);
+	}
 }
 ```
 
@@ -276,12 +275,10 @@ When running the test suite, you can use the tags to filter the test cases that 
 ```ts
 import { TestRunner } from "@rbxts/lunit";
 
-const testRunner = new TestRunner([
-    TestSum
-]);
+const testRunner = new TestRunner([TestSum]);
 
 testRunner.run({
-    tags: ["math"]
+	tags: ["math"],
 });
 ```
 
@@ -295,10 +292,10 @@ The `@Server` decorator is used to mark a test case as a server test case. Serve
 
 ```ts
 class TestSum {
-    @Server
-    public serverTest() {
-        // This test case will only run on the server side
-    }
+	@Server
+	public serverTest() {
+		// This test case will only run on the server side
+	}
 }
 ```
 
@@ -314,10 +311,10 @@ The `@Client` decorator is used to mark a test case as a client test case. Clien
 
 ```ts
 class TestSum {
-    @Client
-    public clientTest() {
-        // This test case will only run on the client side
-    }
+	@Client
+	public clientTest() {
+		// This test case will only run on the client side
+	}
 }
 ```
 
@@ -333,15 +330,15 @@ This decorator takes an order value as a parameter. Test cases are ran in ascend
 
 ```ts
 class TestSum {
-    @Order(1)
-    public test1() {
-        // This test case will be ran first
-    }
+	@Order(1)
+	public test1() {
+		// This test case will be ran first
+	}
 
-    @Order(2)
-    public test2() {
-        // This test case will be ran second
-    }
+	@Order(2)
+	public test2() {
+		// This test case will be ran second
+	}
 }
 ```
 
@@ -357,15 +354,15 @@ A second parameter can be provided to specify a message that explains why the te
 const RUN_TESTS = false;
 
 class TestSum {
-    @Skip(RUN_TESTS) // This test case will be ran if RUN_TESTS is false
-    public windowsOnlyTest() {
-        // This test case will be skipped on Windows
-    }
+	@Skip(RUN_TESTS) // This test case will be ran if RUN_TESTS is false
+	public windowsOnlyTest() {
+		// This test case will be skipped on Windows
+	}
 
-    @Skip(() => !RUN_TESTS, "This test case is disabled because  !RUN_TESTS is true, so it will be skipped")
-    public disabledTest() {
-        // This test case will be skipped
-    }
+	@Skip(() => !RUN_TESTS, "This test case is disabled because  !RUN_TESTS is true, so it will be skipped")
+	public disabledTest() {
+		// This test case will be skipped
+	}
 }
 ```
 
