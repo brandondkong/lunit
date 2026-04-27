@@ -11,55 +11,8 @@ local fs = require("@lune/fs")
 local luau = require("@lune/luau")
 local task = require("@lune/task")
 local stdio = require("@lune/stdio")
+local Promise = require("./promise")
 
--- Fake Heartbeat signal so @rbxts/promise's `Promise._timeEvent` works under Lune.
-local heartbeat = {}
-do
-	local connections = {}
-	local running = false
-
-	local function ensureRunning()
-		if running then
-			return
-		end
-		running = true
-		task.spawn(function()
-			while next(connections) do
-				task.wait()
-				for fn in pairs(connections) do
-					task.spawn(fn)
-				end
-			end
-			running = false
-		end)
-	end
-
-	function heartbeat:Connect(fn)
-		connections[fn] = true
-		ensureRunning()
-		return {
-			Disconnect = function()
-				connections[fn] = nil
-			end,
-		}
-	end
-
-	function heartbeat:Wait()
-		task.wait()
-	end
-end
-
--- Minimal `game` stub. Only `game:GetService("RunService").Heartbeat` is exercised at
--- Promise.lua load time; everything else here is defensive.
-local runService = { Heartbeat = heartbeat, IsRunning = function() return false end, IsClient = function() return false end, IsStudio = function() return false end }
-local game = {}
-function game:GetService(name)
-	if name == "RunService" then
-		return runService
-	end
-	error("Lune shim: unsupported service " .. tostring(name), 2)
-end
-_G.game = game
 _G.task = task
 _G.warn = function(...)
 	local parts = { ... }
@@ -68,9 +21,6 @@ _G.warn = function(...)
 	end
 	stdio.ewrite(stdio.color("yellow") .. table.concat(parts, "\t") .. stdio.color("reset") .. "\n")
 end
-
--- TS.async / TS.await rely on Promise.new and Promise.is. We delegate to whatever
--- Promise instance Promise.lua hands us via `_G[scriptObj].Promise`.
 
 local cache = {}
 local scriptByPath = {}
@@ -109,11 +59,6 @@ local function resolveFile(path)
 	if fs.isFile(asInit) then
 		return asInit
 	end
-	-- Also try the .lua extension (RuntimeLib.lua, Promise.lua live as .lua).
-	local asLua = path .. ".lua"
-	if fs.isFile(asLua) then
-		return asLua
-	end
 	return nil
 end
 
@@ -122,8 +67,8 @@ local loadModule
 
 -- Build the TS runtime helpers. Mirrors RuntimeLib.lua but skips Roblox-only paths
 -- (TS.getModule, the _G[module] guard) and uses our shim's loader for TS.import.
-local function buildTS(promise)
-	local TS = { Promise = promise }
+local function buildTS()
+	local TS = { Promise = Promise }
 
 	function TS.import(_caller, module, ...)
 		local target = module
@@ -137,7 +82,7 @@ local function buildTS(promise)
 		return function(...)
 			local n = select("#", ...)
 			local args = { ... }
-			return promise.new(function(resolve, reject)
+			return Promise.new(function(resolve, reject)
 				coroutine.wrap(function()
 					local ok, result = pcall(callback, table.unpack(args, 1, n))
 					if ok then
@@ -151,13 +96,13 @@ local function buildTS(promise)
 	end
 
 	function TS.await(p)
-		if not promise.is(p) then
+		if not Promise.is(p) then
 			return p
 		end
 		local status, value = p:awaitStatus()
-		if status == promise.Status.Resolved then
+		if status == Promise.Status.Resolved then
 			return value
-		elseif status == promise.Status.Rejected then
+		elseif status == Promise.Status.Rejected then
 			error(value, 2)
 		else
 			error("The awaited Promise was cancelled", 2)
@@ -235,20 +180,6 @@ local function buildTS(promise)
 	return TS
 end
 
--- Bootstrap @rbxts/promise from the roblox-ts include directory.
-local PROMISE_PATH = "node_modules/.pnpm/roblox-ts@3.0.0/node_modules/roblox-ts/include/Promise"
-local promiseModule
-
-local function getPromise()
-	if promiseModule then
-		return promiseModule
-	end
-	local source = "local game, task, warn = _G.game, _G.task, _G.warn\n" .. fs.readFile(PROMISE_PATH .. ".lua")
-	local chunk = luau.load(source, { debugName = "Promise" })
-	promiseModule = chunk()
-	return promiseModule
-end
-
 function loadModule(scriptObj)
 	local path = scriptObj.__path
 	local cached = cache[path]
@@ -262,11 +193,11 @@ function loadModule(scriptObj)
 	end
 
 	-- Provide TS runtime for this module before its chunk runs.
-	_G[scriptObj] = buildTS(getPromise())
+	_G[scriptObj] = buildTS()
 
 	-- Lune's loaded chunks don't inherit globals from the caller, so inject
 	-- `script` (per-module) plus the Roblox-flavored globals we've stubbed in _G.
-	local source = "local script, game, task, warn = ..., _G.game, _G.task, _G.warn\n" .. fs.readFile(filePath)
+	local source = "local script, task, warn = ..., _G.task, _G.warn\n" .. fs.readFile(filePath)
 	local chunk = luau.load(source, { debugName = path })
 	local result = chunk(scriptObj)
 	cache[path] = result
