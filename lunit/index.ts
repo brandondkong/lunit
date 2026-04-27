@@ -17,3 +17,4 @@ export {
 export * as Decorators from "./lib/decorator";
 
 export { default as Assert } from "./lib/assert";
+export { Runtime } from "./lib/runtime";
