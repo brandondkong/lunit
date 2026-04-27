@@ -53,11 +53,13 @@ export class TestClassRunner {
 		};
 		for (const test of testList) {
 			const cases = test.options.cases;
-			const invocations =
-				cases !== undefined && cases.size() > 0 ? cases.map((args, index) => ({ args, index })) : [undefined];
+			// Sentinel is `[{}]` not `[undefined]`: Luau collapses `{ nil }` to an empty table,
+			// so a non-parameterized test would never run.
+			const invocations: ReadonlyArray<{ args?: ReadonlyArray<unknown>; index?: number }> =
+				cases !== undefined && cases.size() > 0 ? cases.map((args, index) => ({ args, index })) : [{}];
 
 			for (const invocation of invocations) {
-				const result = await this.runWithRepeatAndRetry(test, options, invocation?.args, invocation?.index);
+				const result = await this.runWithRepeatAndRetry(test, options, invocation.args, invocation.index);
 				results.elapsedTimeMs += result.elapsedTimeMs;
 				results.numTests++;
 				if (result.passed) results.numTestsPassed++;
@@ -131,10 +133,10 @@ export class TestClassRunner {
 		let totalTime = aggregate.elapsedTimeMs;
 
 		for (let i = 1; i < repeats; i++) {
-			const next = await this.runWithRetry(method, options, caseArgs, caseIndex, maxRetries);
-			totalTime += next.elapsedTimeMs;
+			const nextTry = await this.runWithRetry(method, options, caseArgs, caseIndex, maxRetries);
+			totalTime += nextTry.elapsedTimeMs;
 			// Surface the first failure across iterations; once failed, keep that result.
-			if (aggregate.passed && !next.passed) aggregate = next;
+			if (aggregate.passed && !nextTry.passed) aggregate = nextTry;
 		}
 
 		aggregate.elapsedTimeMs = totalTime;
