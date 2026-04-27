@@ -57,17 +57,13 @@ export class TestClassRunner {
 				cases !== undefined && cases.size() > 0 ? cases.map((args, index) => ({ args, index })) : [undefined];
 
 			for (const invocation of invocations) {
-				// LIFECYCLE:beforeEach
-				await this.runLifecycleMethod(Lifecycle.RunBeforeEachTest);
-				const result = await this.runTestMethod(test, options, invocation?.args, invocation?.index);
+				const result = await this.runWithRepeatAndRetry(test, options, invocation?.args, invocation?.index);
 				results.elapsedTimeMs += result.elapsedTimeMs;
 				results.numTests++;
 				if (result.passed) results.numTestsPassed++;
 				else if (result.skipped) results.numTestsSkipped++;
 				else results.numTestsFailed++;
 				results.tests.push(result);
-				// LIFECYCLE:afterEach
-				await this.runLifecycleMethod(Lifecycle.RunAfterEachTest);
 			}
 		}
 
@@ -119,6 +115,59 @@ export class TestClassRunner {
 				: "Test was marked as a negative test and unexpectedly did not error"
 			: result.errorMessage;
 
+		return result;
+	}
+
+	private async runWithRepeatAndRetry(
+		method: Method,
+		options: TestRunOptions,
+		caseArgs?: ReadonlyArray<unknown>,
+		caseIndex?: number,
+	): Promise<TestCaseResult> {
+		const maxRetries = method.options.retries ?? 0;
+		const repeats = math.max(1, method.options.repeats ?? 1);
+
+		let aggregate = await this.runWithRetry(method, options, caseArgs, caseIndex, maxRetries);
+		let totalTime = aggregate.elapsedTimeMs;
+
+		for (let i = 1; i < repeats; i++) {
+			const next = await this.runWithRetry(method, options, caseArgs, caseIndex, maxRetries);
+			totalTime += next.elapsedTimeMs;
+			// Surface the first failure across iterations; once failed, keep that result.
+			if (aggregate.passed && !next.passed) aggregate = next;
+		}
+
+		aggregate.elapsedTimeMs = totalTime;
+		return aggregate;
+	}
+
+	private async runWithRetry(
+		method: Method,
+		options: TestRunOptions,
+		caseArgs: ReadonlyArray<unknown> | undefined,
+		caseIndex: number | undefined,
+		maxRetries: number,
+	): Promise<TestCaseResult> {
+		let result = await this.runOnce(method, options, caseArgs, caseIndex);
+		let retries = 0;
+		while (retries < maxRetries && !result.passed && !result.skipped) {
+			retries++;
+			result = await this.runOnce(method, options, caseArgs, caseIndex);
+		}
+		return result;
+	}
+
+	private async runOnce(
+		method: Method,
+		options: TestRunOptions,
+		caseArgs?: ReadonlyArray<unknown>,
+		caseIndex?: number,
+	): Promise<TestCaseResult> {
+		// LIFECYCLE:beforeEach
+		await this.runLifecycleMethod(Lifecycle.RunBeforeEachTest);
+		const result = await this.runTestMethod(method, options, caseArgs, caseIndex);
+		// LIFECYCLE:afterEach
+		await this.runLifecycleMethod(Lifecycle.RunAfterEachTest);
 		return result;
 	}
 

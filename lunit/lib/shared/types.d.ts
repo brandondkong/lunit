@@ -21,6 +21,8 @@ export interface MethodMetadata extends BaseMetadata {
 	isTest?: boolean;
 	timeout?: number;
 	cases?: ReadonlyArray<ReadonlyArray<unknown>>;
+	retries?: number;
+	repeats?: number;
 }
 
 export type Method = {

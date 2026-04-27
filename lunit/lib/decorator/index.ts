@@ -233,6 +233,36 @@ export const Only = createSharedDecorator((metadata) => (metadata.only = true));
 export const Each = (rows: ReadonlyArray<ReadonlyArray<unknown>>) =>
 	createMethodDecorator((metadata) => (metadata.cases = rows));
 
+/**
+ * Re-runs a failing test up to `count` additional times before declaring failure.
+ * The first passing attempt wins. Lifecycle hooks (`BeforeEach`/`AfterEach`) re-run between attempts.
+ * @param count - The maximum number of additional attempts after the initial run.
+ * @example
+ * ```typescript
+ * @Retry(3)
+ * @Test
+ * public flakyNetworkCall() {
+ *   // up to 4 total attempts
+ * }
+ * ```
+ */
+export const Retry = (count: number) => createMethodDecorator((metadata) => (metadata.retries = count));
+
+/**
+ * Runs a test `count` times. If any iteration fails, the test is marked as failed.
+ * Lifecycle hooks (`BeforeEach`/`AfterEach`) run for every iteration.
+ * @param count - The number of times to run the test.
+ * @example
+ * ```typescript
+ * @Repeat(50)
+ * @Test
+ * public raceConditionCheck() {
+ *   // run 50 times to surface flaky failures
+ * }
+ * ```
+ */
+export const Repeat = (count: number) => createMethodDecorator((metadata) => (metadata.repeats = count));
+
 export default {
 	// Test property decorators
 	Test,
@@ -245,6 +275,8 @@ export default {
 	Skip,
 	Only,
 	Each,
+	Retry,
+	Repeat,
 
 	// Test execution lifecycle decorators
 	Before,
