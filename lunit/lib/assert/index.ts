@@ -8,21 +8,64 @@ function fail(fallbackMessage: string, message?: AssertMessage): never {
 	throw message !== undefined ? resolveMessage(message) : fallbackMessage;
 }
 
+interface Diff {
+	path: string;
+	actual: unknown;
+	expected: unknown;
+}
+
+const MISSING = "<missing>";
+
+function appendPath(parent: string, key: unknown): string {
+	if (typeIs(key, "number")) return `${parent}[${key}]`;
+	if (typeIs(key, "string")) return parent === "" ? key : `${parent}.${key}`;
+	return `${parent}[${tostring(key)}]`;
+}
+
+function collectDiffs(actual: unknown, expected: unknown, path: string, out: Diff[]): void {
+	if (actual === expected) return;
+	if (!typeIs(actual, "table") || !typeIs(expected, "table")) {
+		out.push({ path: path === "" ? "<root>" : path, actual, expected });
+		return;
+	}
+
+	const actualMap = actual as Map<unknown, unknown>;
+	const expectedMap = expected as Map<unknown, unknown>;
+
+	for (const [key, actualVal] of actualMap) {
+		const childPath = appendPath(path, key);
+		if (!expectedMap.has(key)) {
+			out.push({ path: childPath, actual: actualVal, expected: MISSING });
+		} else {
+			collectDiffs(actualVal, expectedMap.get(key), childPath, out);
+		}
+	}
+	for (const [key, expectedVal] of expectedMap) {
+		if (!actualMap.has(key)) {
+			out.push({ path: appendPath(path, key), actual: MISSING, expected: expectedVal });
+		}
+	}
+}
+
+const MAX_DIFFS_SHOWN = 5;
+
+function formatDiffs(diffs: Diff[]): string {
+	const shown = math.min(diffs.size(), MAX_DIFFS_SHOWN);
+	const lines: string[] = ["deepEqual mismatch:"];
+	for (let i = 0; i < shown; i++) {
+		const d = diffs[i];
+		lines.push(`  at ${d.path}: actual = ${tostring(d.actual)}, expected = ${tostring(d.expected)}`);
+	}
+	if (diffs.size() > MAX_DIFFS_SHOWN) {
+		lines.push(`  ...and ${diffs.size() - MAX_DIFFS_SHOWN} more`);
+	}
+	return lines.join("\n");
+}
+
 function isDeepEqual(a: unknown, b: unknown): boolean {
-	if (a === b) return true;
-	if (!typeIs(a, "table") || !typeIs(b, "table")) return false;
-
-	const aMap = a as Map<unknown, unknown>;
-	const bMap = b as Map<unknown, unknown>;
-
-	for (const [key, value] of aMap) {
-		if (!bMap.has(key)) return false;
-		if (!isDeepEqual(value, bMap.get(key))) return false;
-	}
-	for (const [key] of bMap) {
-		if (!aMap.has(key)) return false;
-	}
-	return true;
+	const diffs: Diff[] = [];
+	collectDiffs(a, b, "", diffs);
+	return diffs.size() === 0;
 }
 
 const Assert = {
@@ -48,11 +91,14 @@ const Assert = {
 	/**
 	 * Asserts structural equality. Recurses into tables, comparing keys and values.
 	 * Primitives, Roblox datatypes (Vector3, CFrame, ...) and Instances compare by `===`.
+	 * On failure, the message includes the path to each mismatch.
 	 * @example Assert.deepEqual({ a: 1, b: [2, 3] }, { a: 1, b: [2, 3] });
 	 */
 	deepEqual<T>(actual: unknown, expected: T, message?: AssertMessage): void {
-		if (!isDeepEqual(actual, expected)) {
-			fail(`Expected ${tostring(actual)} to deeply equal ${tostring(expected)}`, message);
+		const diffs: Diff[] = [];
+		collectDiffs(actual, expected, "", diffs);
+		if (diffs.size() > 0) {
+			fail(formatDiffs(diffs), message);
 		}
 	},
 
