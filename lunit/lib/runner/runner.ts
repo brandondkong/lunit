@@ -9,33 +9,70 @@ const DEFAULT_GLOB_PATTERN = ".+%.test$";
 export class TestRunner {
 	private testClasses: TestClassRunner[] = [];
 
-	public constructor(roots: (Instance | undefined)[], globPattern: string = DEFAULT_GLOB_PATTERN) {
-		roots.filterUndefined().forEach((root) => {
-			this.addRoot(root, globPattern);
-		});
+	public constructor(roots: ReadonlyArray<Instance | undefined> = [], globPattern: string = DEFAULT_GLOB_PATTERN) {
+		for (const root of roots) {
+			if (root !== undefined) this.addRoot(root, globPattern);
+		}
 	}
 
-	public addRoot(root: Instance, globPattern: string = DEFAULT_GLOB_PATTERN): void {
+	/**
+	 * Creates a runner from an explicit list of test class constructors. Use this in
+	 * non-Roblox environments (Lune, CI) where DataModel-based discovery isn't available,
+	 * or any time you want explicit control over which classes run.
+	 *
+	 * @example
+	 * ```typescript
+	 * import TestAssert from "./test/assert.test";
+	 * import TestDecorators from "./test/decorators.test";
+	 *
+	 * const runner = TestRunner.fromClasses([TestAssert, TestDecorators]);
+	 * await runner.run();
+	 * ```
+	 */
+	public static fromClasses(classes: ReadonlyArray<TestClassConstructor>): TestRunner {
+		const runner = new TestRunner();
+		for (const ctor of classes) runner.addClass(ctor);
+		return runner;
+	}
+
+	public addRoot(root: Instance, globPattern: string = DEFAULT_GLOB_PATTERN): this {
 		const modules = getDescendantsOfType(root, "ModuleScript");
 		modules.forEach((module) => {
 			if (module.Name.match(globPattern) !== undefined) {
 				try {
 					const testClass = require(module) as Constructor;
-					this.addClass(testClass, module);
+					this.tryAddClass(testClass, module.Name);
 				} catch (e) {
 					warn('failed to load module "%s": %s'.format(module.Name, tostring(e)));
 				}
 			}
 		});
+		return this;
 	}
 
-	private addClass(ctor: Constructor, module: Instance): void {
+	/**
+	 * Registers a single test class constructor. Returns the runner for chaining.
+	 *
+	 * @example
+	 * ```typescript
+	 * new TestRunner()
+	 *   .addClass(TestAssert)
+	 *   .addClass(TestDecorators)
+	 *   .run();
+	 * ```
+	 */
+	public addClass(ctor: TestClassConstructor): this {
+		this.tryAddClass(ctor, tostring(ctor));
+		return this;
+	}
+
+	private tryAddClass(ctor: Constructor | undefined, sourceName: string): void {
 		if (ctor === undefined) {
-			warn('module "%s" did not return a value'.format(module.Name));
+			warn('test class "%s" did not return a value'.format(sourceName));
 			return;
 		}
 		if ((ctor as unknown as Record<string, unknown>)["new"] === undefined) {
-			warn('module "%s" did not return a class'.format(module.Name));
+			warn('test class "%s" is not a class'.format(sourceName));
 			return;
 		}
 		this.testClasses.push(new TestClassRunner(ctor as TestClassConstructor));
