@@ -1,0 +1,15 @@
+{
+	"name": "lunit-test",
+	"tree": {
+		"$className": "DataModel",
+		"ServerScriptService": {
+			"$className": "ServerScriptService",
+			"lunit": {
+				"$path": "out"
+			},
+			"RunTests": {
+				"$path": "scripts/run-tests.server.luau"
+			}
+		}
+	}
+}
