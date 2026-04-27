@@ -18,6 +18,7 @@
 		"typeRoots": ["node_modules/@rbxts"],
 
 		// configurable
+		"types": ["types"],
 		"rootDir": "lunit",
 		"outDir": "out",
 		"incremental": true,
@@ -25,5 +26,5 @@
 		"declaration": true
 	},
 
-	"exclude": ["out", "test", "scripts", "docs"]
+	"exclude": ["out", "test", "scripts", "docs", "eslint.config.ts"]
 }
