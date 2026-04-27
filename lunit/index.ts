@@ -1,11 +1,9 @@
-export { TestRunner } from "./test-runner";
+export { TestRunner } from "./lib/runner/runner";
 export {
 	Test,
 	Timeout,
 	Disabled,
 	DisplayName,
-	Server,
-	Client,
 	Order,
 	After,
 	AfterAll,
@@ -15,9 +13,7 @@ export {
 	BeforeEach,
 	Tag,
 	Negated,
-} from "./decorators";
-export * as Decorators from "./decorators";
+} from "./lib/decorator";
+export * as Decorators from "./lib/decorator";
 
-export type { Reporter } from "./common";
-
-export { Assert } from "./assert";
+export { default as Assert } from "./lib/assert";

@@ -1,5 +1,6 @@
-import { Annotation, Environment, MethodDecorator } from "./common";
-import { createDecorator, createAnnotation } from "./utils/decorator-utils";
+import { Lifecycle } from "../shared/enums";
+import { addTagsToMetadata } from "../shared/utils";
+import { createSharedDecorator, createMethodDecorator } from "./utils";
 
 /**
  * Marks a method as a test case.
@@ -11,7 +12,7 @@ import { createDecorator, createAnnotation } from "./utils/decorator-utils";
  * }
  * ```
  */
-export const Test = createDecorator({ options: { isATest: true } });
+export const Test = createMethodDecorator((metadata) => (metadata.isTest = true));
 
 /**
  * Disables a test case or test class.
@@ -24,7 +25,8 @@ export const Test = createDecorator({ options: { isATest: true } });
  * }
  * ```
  */
-export const Disabled = (message?: string) => createDecorator({ options: { disabled: { value: true, message } } });
+export const Disabled = (message?: string) =>
+	createSharedDecorator((metadata) => (metadata.disabled = { value: true, message }));
 
 /**
  * Sets a display name for a test case or test class.
@@ -37,7 +39,7 @@ export const Disabled = (message?: string) => createDecorator({ options: { disab
  * }
  * ```
  */
-export const DisplayName = (name: string) => createDecorator({ options: { displayName: name } });
+export const DisplayName = (name: string) => createSharedDecorator((metadata) => (metadata.displayName = name));
 
 /**
  * Sets a timeout for a test case.
@@ -50,7 +52,8 @@ export const DisplayName = (name: string) => createDecorator({ options: { displa
  * }
  * ```
  */
-export const Timeout = (timeInMilliseconds: number) => createDecorator({ options: { timeout: timeInMilliseconds } });
+export const Timeout = (timeInMilliseconds: number) =>
+	createMethodDecorator((metadata) => (metadata.timeout = timeInMilliseconds));
 
 /**
  * Sets the order in which a test case should be run.
@@ -63,34 +66,11 @@ export const Timeout = (timeInMilliseconds: number) => createDecorator({ options
  * }
  * ```
  */
-export const Order = (order: number) => createDecorator({ options: { order } });
-
-/**
- * Specifies that a test case should run on the server.
- * @example
- * ```typescript
- * @Server
- * public myTest() {
- *   // test code here
- * }
- * ```
- */
-export const Server = createDecorator({ options: { environment: Environment.Server } });
-
-/**
- * Specifies that a test case should run on the client.
- * @example
- * ```typescript
- * @Client
- * public myTest() {
- *   // test code here
- * }
- * ```
- */
-export const Client = createDecorator({ options: { environment: Environment.Client } });
+export const Order = (order: number) => createSharedDecorator((metadata) => (metadata.order = order));
 
 /**
  * Marks a method to be run before each test case.
+ * @alias Before
  * @example
  * ```typescript
  * @BeforeEach
@@ -99,7 +79,7 @@ export const Client = createDecorator({ options: { environment: Environment.Clie
  * }
  * ```
  */
-export const BeforeEach = createAnnotation(Annotation.BeforeEach);
+export const BeforeEach = createMethodDecorator((metadata) => metadata.lifecycles.push(Lifecycle.RunBeforeEachTest));
 
 /**
  * Marks a method to be run before each test case.
@@ -111,7 +91,7 @@ export const BeforeEach = createAnnotation(Annotation.BeforeEach);
  * }
  * ```
  */
-export const Before = createAnnotation(Annotation.BeforeEach);
+export const Before = BeforeEach;
 
 /**
  * Marks a method to be run before all test cases.
@@ -123,7 +103,7 @@ export const Before = createAnnotation(Annotation.BeforeEach);
  * }
  * ```
  */
-export const BeforeAll = createAnnotation(Annotation.BeforeAll);
+export const BeforeAll = createMethodDecorator((metadata) => metadata.lifecycles.push(Lifecycle.RunBeforeAllTests));
 
 /**
  * Marks a method to be run after each test case.
@@ -135,7 +115,7 @@ export const BeforeAll = createAnnotation(Annotation.BeforeAll);
  * }
  * ```
  */
-export const After = createAnnotation(Annotation.AfterEach);
+export const After = createMethodDecorator((metadata) => metadata.lifecycles.push(Lifecycle.RunAfterEachTest));
 
 /**
  * Marks a method to be run after each test case.
@@ -147,7 +127,7 @@ export const After = createAnnotation(Annotation.AfterEach);
  * }
  * ```
  */
-export const AfterEach = createAnnotation(Annotation.AfterEach);
+export const AfterEach = createMethodDecorator((metadata) => metadata.lifecycles.push(Lifecycle.RunAfterEachTest));
 
 /**
  * Marks a method to be run after all test cases.
@@ -159,7 +139,7 @@ export const AfterEach = createAnnotation(Annotation.AfterEach);
  * }
  * ```
  */
-export const AfterAll = createAnnotation(Annotation.AfterAll);
+export const AfterAll = createMethodDecorator((metadata) => metadata.lifecycles.push(Lifecycle.RunAfterAllTests));
 
 /**
  * Assigns one or more tags to a test case or test class for filtering and categorization.
@@ -182,7 +162,7 @@ export const AfterAll = createAnnotation(Annotation.AfterAll);
  * }
  * ```
  */
-export const Tag = (...args: string[]) => createDecorator({ options: { tags: args } });
+export const Tag = (...args: string[]) => createSharedDecorator((metadata) => addTagsToMetadata(metadata, ...args));
 
 /**
  * Flips the result of a test case. If the test case would normally pass, it will be marked as failed, and if it would normally fail, it will be marked as passed.
@@ -197,9 +177,7 @@ export const Tag = (...args: string[]) => createDecorator({ options: { tags: arg
  * }
  * ```
  */
-export const Negated = createDecorator({
-	options: { negated: true },
-});
+export const Negated = createMethodDecorator((metadata) => (metadata.negated = true));
 
 /**
  * Conditionally skips a test case or test class.
@@ -213,18 +191,47 @@ export const Negated = createDecorator({
  * }
  * ```
  */
-export function Skip(condition: boolean): MethodDecorator;
-export function Skip(condition: () => boolean): MethodDecorator;
-export function Skip(condition: boolean | (() => boolean), message?: string): MethodDecorator {
-	return createDecorator({
-		options: {
-			disabled: {
-				value: type(condition) === "boolean" ? (condition as boolean) : (condition as () => boolean)(),
-				message,
-			},
-		},
+export const Skip = (condition: boolean | (() => boolean), message?: string) =>
+	createSharedDecorator((metadata) => {
+		metadata.disabled = {
+			value: typeIs(condition, "boolean") ? condition : condition(),
+			message,
+		};
 	});
-}
+
+/**
+ * Focuses execution on a specific test case or test class. When any test or class is marked `@Only`,
+ * only those marked are run. Method-level focus narrows within a class; class-level focus narrows
+ * across the whole run.
+ * @example
+ * ```typescript
+ * @Only
+ * @Test
+ * public theOneIcareAbout() {
+ *   // only this test will run if any test has @Only
+ * }
+ * ```
+ */
+export const Only = createSharedDecorator((metadata) => (metadata.only = true));
+
+/**
+ * Runs a single test method once per row, with the row's values spread as arguments.
+ * Each row produces an independent test result.
+ * @param rows - An array of argument tuples to invoke the test with.
+ * @example
+ * ```typescript
+ * @Each([
+ *   [1, 2, 3],
+ *   [10, 20, 30],
+ * ])
+ * @Test
+ * public addition(a: number, b: number, expected: number) {
+ *   Assert.equal(a + b, expected);
+ * }
+ * ```
+ */
+export const Each = (rows: ReadonlyArray<ReadonlyArray<unknown>>) =>
+	createMethodDecorator((metadata) => (metadata.cases = rows));
 
 export default {
 	// Test property decorators
@@ -233,11 +240,11 @@ export default {
 	DisplayName,
 	Timeout,
 	Order,
-	Server,
-	Client,
 	Tag,
 	Negated,
 	Skip,
+	Only,
+	Each,
 
 	// Test execution lifecycle decorators
 	Before,
