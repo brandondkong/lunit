@@ -3,7 +3,7 @@ import { getClassMetadata } from "../metadata/utils";
 import { TestCaseResult, TestRunResult } from "../runner/types";
 
 function getSymbol(passed: boolean, skipped?: boolean) {
-	return skipped ? "⏭️" : passed ? "✅" : "❌";
+	return skipped ? "↓" : passed ? "✓" : "✗";
 }
 
 function formatTestResult(
@@ -67,9 +67,7 @@ function formatTests(results: TestRunResult): StringBuilder {
 		);
 
 		testResultsRecord.tests.forEach((testResult, index) => {
-			stringBuilder.appendLine(
-				formatTestResult(testResult, index === testResultsRecord.tests.size() - 1).toString(),
-			);
+			stringBuilder.append(formatTestResult(testResult, index === testResultsRecord.tests.size() - 1).toString());
 		});
 		stringBuilder.appendLine();
 	});
@@ -77,7 +75,7 @@ function formatTests(results: TestRunResult): StringBuilder {
 }
 
 export function getTestSummary(results: TestRunResult) {
-	const stringBuilder = new StringBuilder("\n\n");
+	const stringBuilder = new StringBuilder("\n");
 	if (results.tags !== undefined) {
 		stringBuilder.appendLine(`Ran filtered tests on the following tags: ${results.tags.join(", ")}`);
 		stringBuilder.appendLine();
@@ -86,14 +84,12 @@ export function getTestSummary(results: TestRunResult) {
 		stringBuilder.appendLine("No tests ran.");
 		return stringBuilder.toString();
 	}
-	stringBuilder.appendLine(formatTests(results).toString());
+	stringBuilder.append(formatTests(results).toString());
 
 	if (results.numTestsFailed > 0) {
-		stringBuilder.appendLine(formatTestFailures(results).toString());
+		stringBuilder.append(formatTestFailures(results).toString());
 	}
-	stringBuilder.appendLine();
-	stringBuilder.appendLine(formatTestRunSummary(results).toString());
-	stringBuilder.appendLine();
+	stringBuilder.append(formatTestRunSummary(results).toString());
 
 	return stringBuilder.toString();
 }
