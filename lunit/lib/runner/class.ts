@@ -79,7 +79,11 @@ export class TestClassRunner {
 			const methods = getLifecycleMethods(this.testClassConstructor, lifecycle);
 			for (const callback of methods) {
 				await Promise.try(() => callback(this.instance)).catch((e) => {
-					warn(tostring(e));
+					// @rbxts/promise wraps thrown values in a Promise.Error whose
+					// __tostring dumps the full execution trace. Pull the original
+					// value off `.error` when present so the warn line is readable.
+					const original = typeIs(e, "table") ? ((e as { error?: unknown }).error ?? e) : e;
+					warn(tostring(original));
 				});
 			}
 		});
