@@ -30,6 +30,6 @@ export default defineConfig({
 			{ text: "Contributing", link: "/contributing" },
 		],
 
-		socialLinks: [{ icon: "github", link: "https://github.com/brandon-kong/lunit" }],
+		socialLinks: [{ icon: "github", link: "https://github.com/brandondkong/lunit" }],
 	},
 });
