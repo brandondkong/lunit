@@ -3,13 +3,14 @@ import { defineConfig } from "vitepress";
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
 	title: "@rbxts/lunit",
-	description: "A robust TypeScript testing library for Roblox-TS projects",
+	description: "A TypeScript testing framework for Roblox and Lune",
 	base: "/lunit/",
 	themeConfig: {
 		// https://vitepress.dev/reference/default-theme-config
 		nav: [
 			{ text: "Home", link: "/" },
-			{ text: "Examples", link: "/markdown-examples" },
+			{ text: "Getting Started", link: "/getting-started" },
+			{ text: "API", link: "/api-reference" },
 		],
 
 		sidebar: [
@@ -21,22 +22,10 @@ export default defineConfig({
 				text: "Guides",
 				items: [
 					{ text: "Decorators", link: "/guides/decorators" },
-					{ text: "Assertions", link: "/guides/assertions" },
-					{ text: "Test Suites", link: "/guides/test-suites" },
-					{ text: "Test Runners", link: "/guides/test-runners" },
+					{ text: "Running under Lune", link: "/guides/lune" },
 				],
 			},
-
-			{
-				text: "Creating and Running Tests",
-				items: [
-					{ text: "Creating Tests", link: "/creating-tests" },
-					{ text: "Test Suites", link: "/creating-tests/test-suites" },
-				],
-			},
-
 			{ text: "API Reference", link: "/api-reference" },
-			{ text: "Contributing", link: "/contributing" },
 		],
 
 		socialLinks: [{ icon: "github", link: "https://github.com/brandon-kong/lunit" }],

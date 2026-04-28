@@ -4,8 +4,8 @@ layout: home
 
 hero:
     name: "@rbxts/lunit"
-    text: "A robust TypeScript testing library for Roblox-TS projects"
-    tagline: "Simple and efficient testing for Roblox-TS projects"
+    text: "A TypeScript testing framework for Roblox and Lune"
+    tagline: "Same tests, two runtimes — fast Lune feedback locally, Studio for integration."
     actions:
         - theme: brand
           text: Get Started
@@ -15,10 +15,10 @@ hero:
           link: /api-reference
 
 features:
-    - title: Easy to Use
-      details: LUnit provides an intuitive and lightweight assertion system, making it easy to write and understand tests.
-    - title: Roblox-TS Ecosystem
-      details: The library integrates seamlessly with Roblox-TS, allowing developers to write tests using TypeScript while targeting the Roblox game engine.
-    - title: Batteries-included
-      details: Supports various testing patterns, including unit tests, integration tests, and performance benchmarks.
+    - title: Decorator-driven
+      details: "@Test, @BeforeEach, @Each, @Retry, @Only, @Tag — declarative test definitions with no setup boilerplate."
+    - title: Roblox + Lune
+      details: The same *.test.ts files run in Studio against a live DataModel and outside Roblox under Lune for CI. Gate runtime-specific cases with @Skip + Runtime.
+    - title: Batteries included
+      details: Path-annotated deepEqual diffs, parameterized tests, retry/repeat for flake handling, custom reporters, tag filtering, focus mode.
 ---
