@@ -21,11 +21,13 @@ export default defineConfig({
 			{
 				text: "Guides",
 				items: [
+					{ text: "Writing tests", link: "/guides/writing-tests" },
 					{ text: "Decorators", link: "/guides/decorators" },
 					{ text: "Running under Lune", link: "/guides/lune" },
 				],
 			},
 			{ text: "API Reference", link: "/api-reference" },
+			{ text: "Contributing", link: "/contributing" },
 		],
 
 		socialLinks: [{ icon: "github", link: "https://github.com/brandon-kong/lunit" }],

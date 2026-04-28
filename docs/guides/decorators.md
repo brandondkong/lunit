@@ -31,11 +31,12 @@ export = TestSum;
 
 Decorators come in two flavors:
 
--   **Method-only** (`@Test`, `@BeforeEach`, `@Timeout`, `@Each`, `@Retry`,
-    `@Repeat`, `@Negated`) — apply to a single method.
+-   **Method-only** (`@Test`, `@BeforeEach`, `@BeforeAll`, `@AfterEach`,
+    `@AfterAll`, `@Timeout`, `@Each`, `@Retry`, `@Repeat`, `@Negated`) — apply
+    to a single method. Attaching them to a class does nothing useful.
 -   **Shared** (`@DisplayName`, `@Order`, `@Tag`, `@Skip`, `@Disabled`, `@Only`)
-    — apply to either a method or the whole class. When placed on the class,
-    every test inside inherits the behavior.
+    — apply to either a method or the whole class. Each section below spells
+    out the class-level behavior explicitly.
 
 ## Marking tests
 
@@ -117,14 +118,26 @@ class TestSum {
 
 ### `@Disabled`
 
-Marks a test (or every test on the class) as skipped. Optional message
-appears in the report.
+Marks a test as skipped. Optional message appears in the report.
 
 ```ts
 class TestSum {
 	@Disabled("not implemented yet")
 	@Test
 	public unfinishedTest() {}
+}
+```
+
+**On a class:** every test in the class is skipped with the same message,
+and `@BeforeAll` / `@AfterAll` are not invoked.
+
+```ts
+@Disabled("blocked on database refactor")
+class TestDatabase {
+	@Test
+	public connects() {}
+	@Test
+	public reads() {}
 }
 ```
 
@@ -152,6 +165,20 @@ class TestServices {
 The condition is evaluated when the runner reads the test list, so a
 function form lets you defer expensive checks.
 
+**On a class:** the condition is evaluated once; if true, every test is
+skipped (just like class-level `@Disabled`). Useful for gating an entire
+suite by environment:
+
+```ts
+@Skip(!Runtime.isRoblox(), "Roblox-only suite")
+class TestDataModel {
+	@Test
+	public a() {}
+	@Test
+	public b() {}
+}
+```
+
 ## Display & ordering
 
 ### `@DisplayName`
@@ -169,12 +196,23 @@ class TestSum {
 }
 ```
 
+**On a class:** replaces the class header in the report — handy when the
+class identity (e.g. `TestSum`) doesn't read well as a section title.
+
+```ts
+@DisplayName("Sum of integers")
+class TestSum {
+	@Test
+	public addsTwoNumbers() {}
+}
+```
+
 ### `@Order`
 
-Sets execution order within a class. Tests with lower order run first.
-Tests without `@Order` use the framework's default (which currently sorts
-them after explicitly-ordered ones; don't rely on relative order between
-unmarked tests).
+Sets execution order. Tests with lower order run first. Tests without
+`@Order` use the framework's default (which currently sorts them after
+explicitly-ordered ones; don't rely on relative order between unmarked
+tests).
 
 ```ts
 class TestSum {
@@ -185,6 +223,24 @@ class TestSum {
 	@Order(2)
 	@Test
 	public second() {}
+}
+```
+
+**On a class:** controls the order in which classes are run within the
+suite. Useful when one suite seeds state another reads (though prefer
+explicit fixtures over ordering when you can).
+
+```ts
+@Order(1)
+class TestSeed {
+	@Test
+	public createsRecord() {}
+}
+
+@Order(2)
+class TestRead {
+	@Test
+	public readsRecord() {}
 }
 ```
 
@@ -214,11 +270,29 @@ await TestRunner.fromClasses([TestSum]).run({ tags: ["smoke"] });
 A test runs if **any** of its tags (or its class's tags) matches **any**
 of the requested tags. Pass no `tags` and everything runs.
 
+**On a class:** every test in the class inherits the class's tags. Useful
+for tagging an entire suite as `integration` or `slow` without
+repeating yourself.
+
+```ts
+@Tag("integration")
+class TestDatabase {
+	@Test
+	public connects() {} // inherits "integration"
+
+	@Tag("slow")
+	@Test
+	public bulkImport() {} // inherits "integration", adds "slow"
+}
+```
+
 ### `@Only`
 
 Focus mode. When any test or class is `@Only`, only those run; everything
-else is implicitly skipped. Method-level `@Only` narrows within a class;
-class-level `@Only` narrows across the whole run.
+else is implicitly skipped.
+
+**On a method:** narrows within the class. Other tests on the same
+class don't run, but other classes are unaffected.
 
 ```ts
 class TestSum {
@@ -230,6 +304,26 @@ class TestSum {
 	public ignoredWhileOnlyIsActive() {}
 }
 ```
+
+**On a class:** narrows across the whole run. Other classes don't
+execute at all (their tests don't even appear in the report).
+
+```ts
+@Only
+class TestFocused {
+	@Test
+	public a() {}
+}
+
+class TestIgnored {
+	@Test
+	public a() {} // not run
+}
+```
+
+Method and class focus interact: if some classes are `@Only`-marked,
+only those classes are considered, then within each, method-level
+`@Only` (if any) further narrows.
 
 Convenient for iterating on a single test. Pull the `@Only` before
 committing — Lunit doesn't warn about leftover focus markers.
