@@ -2,7 +2,7 @@ import Assert from "../lib/assert";
 import { Test } from "../lib/decorator";
 import { TestRunner } from "../lib/runner/runner";
 
-const silentReporter = { output() {} };
+const silentReporter = { output: () => {} };
 
 class TestRunnerApi {
 	@Test
@@ -90,7 +90,7 @@ class TestRunnerApi {
 				onTestEnd() {
 					onTestEndCount++;
 				},
-				output() {},
+				output: () => {},
 			},
 		});
 

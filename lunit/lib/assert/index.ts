@@ -210,8 +210,8 @@ const Assert = {
 		message?: AssertMessage,
 	): void {
 		const found = typeIs(elementOrPredicate, "function")
-			? array.some(elementOrPredicate as (element: T) => boolean)
-			: array.includes(elementOrPredicate as T);
+			? array.some(elementOrPredicate)
+			: array.includes(elementOrPredicate);
 		if (!found) {
 			fail("Expected array to contain element", message);
 		}
@@ -226,8 +226,8 @@ const Assert = {
 		message?: AssertMessage,
 	): void {
 		const found = typeIs(elementOrPredicate, "function")
-			? array.some(elementOrPredicate as (element: T) => boolean)
-			: array.includes(elementOrPredicate as T);
+			? array.some(elementOrPredicate)
+			: array.includes(elementOrPredicate);
 		if (found) {
 			fail("Expected array to not contain element", message);
 		}
@@ -301,7 +301,7 @@ const Assert = {
 		}
 	},
 
-	async timeout<T>(promise: Promise<T>, durationInMilliseconds: number, message?: AssertMessage): Promise<void> {
+	timeout<T>(promise: Promise<T>, durationInMilliseconds: number, message?: AssertMessage): void {
 		const [status] = promise.timeout(durationInMilliseconds / 1000).awaitStatus();
 		if (status !== Promise.Status.Resolved) {
 			fail(`Expected promise to resolve within ${durationInMilliseconds}ms`, message);

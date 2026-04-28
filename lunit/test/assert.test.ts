@@ -57,7 +57,7 @@ class TestAssert {
 		Assert.true(true);
 		Assert.false(false);
 		Assert.throws(() => Assert.true(false));
-		Assert.throws(() => Assert.true(1 as unknown as boolean));
+		Assert.throws(() => Assert.true(1));
 		Assert.throws(() => Assert.false(true));
 	}
 

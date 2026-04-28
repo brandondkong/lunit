@@ -16,7 +16,10 @@ function normalizePatterns(input: GlobPattern): ReadonlyArray<string> {
 export class TestRunner {
 	private testClasses: TestClassRunner[] = [];
 
-	public constructor(roots: ReadonlyArray<Instance | undefined> = [], globPattern: GlobPattern = DEFAULT_GLOB_PATTERNS) {
+	public constructor(
+		roots: ReadonlyArray<Instance | undefined> = [],
+		globPattern: GlobPattern = DEFAULT_GLOB_PATTERNS,
+	) {
 		for (const root of roots) {
 			if (root !== undefined) this.addRoot(root, globPattern);
 		}
@@ -83,7 +86,7 @@ export class TestRunner {
 			warn('test class "%s" is not a class'.format(sourceName));
 			return;
 		}
-		this.testClasses.push(new TestClassRunner(ctor as TestClassConstructor));
+		this.testClasses.push(new TestClassRunner(ctor));
 	}
 
 	public async run(options: TestRunOptions = {}): Promise<TestRunResult> {
@@ -112,7 +115,9 @@ export class TestRunner {
 		}
 		// REPORTER:onRunEnd
 		reporter.onRunEnd?.();
-		(reporter.output ?? print)(getReport(results));
+		const report = getReport(results);
+		if (reporter.output !== undefined) reporter.output(report);
+		else print(report);
 		return results;
 	}
 

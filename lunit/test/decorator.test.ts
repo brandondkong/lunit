@@ -22,7 +22,7 @@ import {
 import { TestRunner } from "../lib/runner/runner";
 import { TestClassConstructor, TestRunOptions, TestRunResult } from "../lib/runner/types";
 
-const silentReporter = { output() {} };
+const silentReporter = { output: () => {} };
 
 async function runIsolated(
 	classes: ReadonlyArray<TestClassConstructor>,

@@ -10,7 +10,7 @@ export function getKeysFromMap<K extends defined>(map: Map<K, unknown>): K[] {
 export function getValuesFromMap<V extends defined>(map: Map<unknown, V>): V[] {
 	const res: V[] = [];
 
-	map.forEach((val, _) => {
+	map.forEach((val) => {
 		res.push(val);
 	});
 	return res;

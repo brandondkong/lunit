@@ -105,11 +105,13 @@ export class TestClassRunner {
 		return Promise.try(async () => {
 			const methods = getLifecycleMethods(this.testClassConstructor, lifecycle);
 			for (const callback of methods) {
-				await Promise.try(() => callback(this.instance)).catch((e) => {
+				await Promise.try(() => {
+					callback(this.instance);
+				}).catch((e: unknown) => {
 					// @rbxts/promise wraps thrown values in a Promise.Error whose
 					// __tostring dumps the full execution trace. Pull the original
 					// value off `.error` when present so the warn line is readable.
-					const original = typeIs(e, "table") ? ((e as { error?: unknown }).error ?? e) : e;
+					const original: unknown = typeIs(e, "table") ? ((e as { error?: unknown }).error ?? e) : e;
 					warn(tostring(original));
 				});
 			}
@@ -210,7 +212,9 @@ export class TestClassRunner {
 		caseArgs?: ReadonlyArray<unknown>,
 		caseIndex?: number,
 	): Promise<TestCaseResult> {
-		const callback = (this.testClassConstructor as unknown as TestClass)[method.name] as Callback | undefined;
+		const callback = (this.testClassConstructor as unknown as TestClass)[method.name] as
+			| ((instance: TestClassInstance, ...args: unknown[]) => unknown)
+			| undefined;
 		if (!callback) {
 			throw "method %s does not exist on class %s".format(method.name, this.getClassDisplayName());
 		}
@@ -231,10 +235,10 @@ export class TestClassRunner {
 				result.skipped = true;
 				result.errorMessage = method.options.disabled.message;
 			} else {
-				const invoke =
+				const invoke: () => unknown =
 					caseArgs !== undefined ? () => callback(this.instance, ...caseArgs) : () => callback(this.instance);
 				const timeout = method.options.timeout;
-				if (timeout) {
+				if (timeout !== undefined) {
 					const [status] = Promise.try(invoke)
 						.timeout(timeout / 1000)
 						.awaitStatus();

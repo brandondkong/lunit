@@ -41,5 +41,5 @@ export interface AssertConstructor {
 
 	resolves<T>(promise: Promise<T>, message?: AssertMessage): void;
 	rejects<T>(promise: Promise<T>, message?: AssertMessage): void;
-	timeout<T>(promise: Promise<T>, durationInMilliseconds: number, message?: AssertMessage): Promise<void>;
+	timeout<T>(promise: Promise<T>, durationInMilliseconds: number, message?: AssertMessage): void;
 }

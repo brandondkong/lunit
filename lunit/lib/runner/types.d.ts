@@ -55,8 +55,8 @@ export interface Reporter {
 	onTestSkipped?(testName: string, reason?: string): void;
 	onTestFailed?(testName: string, error?: string): void;
 
-	getReport?(report: TestRunResult): string;
-	output?(text: string): void;
+	getReport?: (report: TestRunResult) => string;
+	output?: (text: string) => void;
 }
 
 export interface TestClass extends Record<string, unknown> {
