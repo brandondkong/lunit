@@ -1,82 +1,108 @@
-[NPM Registry](https://npmjs.org/@rbxts/lunit)
-
 # @rbxts/lunit
 
-@rbxts/lunit is a testing library for Roblox TypeScript projects, providing a simple and efficient way to write and run tests.
+A TypeScript testing framework for Roblox and Lune. Write tests once, run
+them in Studio against a live DataModel **or** outside Roblox under Lune
+in milliseconds — same `*.test.ts` files, same output.
 
-## Features
+[![npm version](https://img.shields.io/npm/v/@rbxts/lunit.svg)](https://www.npmjs.com/package/@rbxts/lunit)
+[![CI](https://github.com/brandon-kong/lunit/actions/workflows/test.yml/badge.svg)](https://github.com/brandon-kong/lunit/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Docs](https://img.shields.io/badge/docs-vitepress-brightgreen.svg)](https://github.brandondkong.com/lunit)
 
-- **Easy to Use**: Simple and intuitive API for writing tests.
-- **TypeScript Support**: Fully supports TypeScript, making it easy to write and maintain tests.
-- **Integration with Roblox**: Designed specifically for Roblox projects, ensuring seamless integration.
-- **Customizable Reporters**: Built-in support for custom reporters to format test results as needed.
-- **Comprehensive Assertions**: Provides a wide range of assertions to validate your code.
-- **Define Testing Criteria**: Using native Typescript Decorators, you can define criteria/properties for each of your tests, making them easier to manage and organize!
+```ts
+import { Test, BeforeEach, Assert } from "@rbxts/lunit";
 
-## Why Use @rbxts/lunit
-
-- **No Dependencies**: The library has no dependencies, making it lightweight and easy to integrate with your current game or framework.
-- **Robust Testing**: Comprehensive assertions and easy-to-use functions for thorough testing.
-- **Minimal, But Powerful**: The syntax for writing tests is underwhelming, but it also exposes all sorts of APIs for writing flexible tests.
-
-## Installation
-
-To install the library, use npm:
-
-```sh
-npm install @rbxts/lunit
-```
-
-## Usage
-
-### Writing Tests
-
-Tests in LUnit can be defined as a simple TypeScript class. Each test is treated like a module, so you'll export the class definition as the module. Here's an example:
-
-```typescript
-// ReplicatedStorage/Tests/SomeTest.spec.ts
-import { Test, DisplayName, Assert } from "@rbxts/lunit";
-
-// this is the function we're testing
-function sum(a: number, b: number): number {
-	return a + b;
-}
-
-class TestClass {
+class TestSum {
 	@Test
-	sumTwoNums() {
-		Assert.equals(sum(5, 5), 10);
-		Assert.notEqual(sum(5, 5), 999);
+	public addsTwoNumbers() {
+		Assert.equal(1 + 1, 2);
 	}
 }
 
-export = TestClass; // export the class as a module
+export = TestSum;
 ```
 
-### Running Tests
+```text
+[✓] TestSum (0ms)
+ │   └── [✓] addsTwoNumbers (0ms) PASSED
 
-To run your tests, use the following npm script:
+    Ran 1 tests in 0ms
+        Passed: 1
+        Failed: 0
+        Skipped: 0
+```
+
+## Highlights
+
+-   **Decorator-driven.** `@Test`, `@BeforeEach`, `@Each`, `@Retry`,
+    `@Repeat`, `@Only`, `@Tag`, and friends — declarative test definitions
+    with no setup boilerplate.
+-   **Roblox + Lune.** The same files run in Studio (DataModel discovery)
+    and under [Lune](https://lune-org.github.io/docs/) (filesystem
+    discovery). Gate runtime-specific cases with `@Skip` + `Runtime`.
+-   **Path-annotated `deepEqual` diffs.** Failures point at the exact
+    nested path that doesn't match.
+-   **Parameterized tests** via `@Each`, **flake handling** via
+    `@Retry` / `@Repeat`, **focus mode** via `@Only`, **tag filtering**
+    via `@Tag`.
+-   **Custom reporters.** Override per-test/per-run hooks or replace the
+    final summary outright.
+-   **Self-contained Lune path.** Ships a runtime shim, a ~115-line Promise
+    impl, and an ANSI-colored reporter — no `@rbxts/promise` needed
+    outside Roblox.
+
+## Install
+
+```sh
+pnpm add @rbxts/lunit       # or: npm install @rbxts/lunit
+```
+
+For Lune-side runs, install [Lune](https://github.com/lune-org/lune) too:
+
+```sh
+rokit add lune-org/lune
+```
+
+## Run tests
+
+**In Roblox Studio** — wire up a server script:
 
 ```ts
-// SomeScript.server.ts
-import { ReplicatedStorage } from "@rbxts/services";
 import { TestRunner } from "@rbxts/lunit";
+import { ReplicatedStorage } from "@rbxts/services";
 
-const testRunner = new TestRunner([
-	ReplicatedStorage.FindFirstChild("Tests"), // the folder containing all your test modules
-]);
-
-testRunner.run();
+new TestRunner([ReplicatedStorage.FindFirstChild("Tests")]).run();
 ```
 
-## License
+**Under Lune** — point the bundled runner at your compiled tests:
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+```sh
+lune run node_modules/@rbxts/lunit/scripts/lunit.luau out/tests
+```
+
+Or drop it into `package.json`:
+
+```json
+{
+	"scripts": {
+		"test": "rbxtsc && lune run node_modules/@rbxts/lunit/scripts/lunit.luau out/tests"
+	}
+}
+```
+
+## Documentation
+
+-   [Getting Started](https://github.brandondkong.com/lunit/getting-started) — Roblox, Lune, and both.
+-   [Decorators](https://github.brandondkong.com/lunit/guides/decorators) — every decorator, with class-level behavior spelled out.
+-   [Writing tests](https://github.brandondkong.com/lunit/guides/writing-tests) — patterns past the basics.
+-   [Running under Lune](https://github.brandondkong.com/lunit/guides/lune) — CI, runtime gating, troubleshooting.
+-   [API reference](https://github.brandondkong.com/lunit/api-reference)
 
 ## Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request.
+Issues and PRs welcome. See the [Contributing guide](https://github.brandondkong.com/lunit/contributing)
+for the local loop, repo layout, and conventions.
 
-## Author
+## License
 
-Brandon Kong
+[MIT](LICENSE) © Brandon Kong
