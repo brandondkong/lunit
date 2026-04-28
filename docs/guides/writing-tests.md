@@ -87,11 +87,11 @@ Methods share `this`, so `@BeforeEach` is the right place to reset state.
 `Assert` throws on failure. The handful you'll reach for most:
 
 ```ts
-Assert.equal(actual, expected);            // strict ===
-Assert.deepEqual({ a: 1 }, { a: 1 });      // recursive — reports diff paths
-Assert.true(condition);                    // strictly true (not just truthy)
-Assert.throws(() => parse("nope"));        // callback must throw
-Assert.match("hello world", "^hello");     // Lua pattern
+Assert.equal(actual, expected); // strict ===
+Assert.deepEqual({ a: 1 }, { a: 1 }); // recursive — reports diff paths
+Assert.true(condition); // strictly true (not just truthy)
+Assert.throws(() => parse("nope")); // callback must throw
+Assert.match("hello world", "^hello"); // Lua pattern
 ```
 
 See the [API Reference](/api-reference#assert) for the full list.
@@ -202,12 +202,12 @@ Prefix shared modules with `_` (or any name not matching `*.test` /
 
 A few decorators are designed for the inner-loop:
 
--   **`@Only`** — focus mode. Add it to one test (or one class) and Lunit
-    runs only what's marked. Pull it before committing.
--   **`@Disabled("reason")`** — temporary skip. The reason shows up in the
-    report so it's visible across the team.
--   **`@Tag("slow")`** plus `run({ tags: ["smoke"] })` — split your suite
-    into fast and slow buckets, run only what you need.
+- **`@Only`** — focus mode. Add it to one test (or one class) and Lunit
+  runs only what's marked. Pull it before committing.
+- **`@Disabled("reason")`** — temporary skip. The reason shows up in the
+  report so it's visible across the team.
+- **`@Tag("slow")`** plus `run({ tags: ["smoke"] })` — split your suite
+  into fast and slow buckets, run only what you need.
 
 ## Flake handling
 

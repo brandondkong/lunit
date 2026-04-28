@@ -31,12 +31,12 @@ export = TestSum;
 
 Decorators come in two flavors:
 
--   **Method-only** (`@Test`, `@BeforeEach`, `@BeforeAll`, `@AfterEach`,
-    `@AfterAll`, `@Timeout`, `@Each`, `@Retry`, `@Repeat`, `@Negated`) — apply
-    to a single method. Attaching them to a class does nothing useful.
--   **Shared** (`@DisplayName`, `@Order`, `@Tag`, `@Skip`, `@Disabled`, `@Only`)
-    — apply to either a method or the whole class. Each section below spells
-    out the class-level behavior explicitly.
+- **Method-only** (`@Test`, `@BeforeEach`, `@BeforeAll`, `@AfterEach`,
+  `@AfterAll`, `@Timeout`, `@Each`, `@Retry`, `@Repeat`, `@Negated`) — apply
+  to a single method. Attaching them to a class does nothing useful.
+- **Shared** (`@DisplayName`, `@Order`, `@Tag`, `@Skip`, `@Disabled`, `@Only`)
+  — apply to either a method or the whole class. Each section below spells
+  out the class-level behavior explicitly.
 
 ## Marking tests
 

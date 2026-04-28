@@ -34,22 +34,22 @@ export = TestSum;
 
 ## Highlights
 
--   **Decorator-driven.** `@Test`, `@BeforeEach`, `@Each`, `@Retry`,
-    `@Repeat`, `@Only`, `@Tag`, and friends — declarative test definitions
-    with no setup boilerplate.
--   **Roblox + Lune.** The same files run in Studio (DataModel discovery)
-    and under [Lune](https://lune-org.github.io/docs/) (filesystem
-    discovery). Gate runtime-specific cases with `@Skip` + `Runtime`.
--   **Path-annotated `deepEqual` diffs.** Failures point at the exact
-    nested path that doesn't match.
--   **Parameterized tests** via `@Each`, **flake handling** via
-    `@Retry` / `@Repeat`, **focus mode** via `@Only`, **tag filtering**
-    via `@Tag`.
--   **Custom reporters.** Override per-test/per-run hooks or replace the
-    final summary outright.
--   **Self-contained Lune path.** Ships a runtime shim, a ~115-line Promise
-    impl, and an ANSI-colored reporter — no `@rbxts/promise` needed
-    outside Roblox.
+- **Decorator-driven.** `@Test`, `@BeforeEach`, `@Each`, `@Retry`,
+  `@Repeat`, `@Only`, `@Tag`, and friends — declarative test definitions
+  with no setup boilerplate.
+- **Roblox + Lune.** The same files run in Studio (DataModel discovery)
+  and under [Lune](https://lune-org.github.io/docs/) (filesystem
+  discovery). Gate runtime-specific cases with `@Skip` + `Runtime`.
+- **Path-annotated `deepEqual` diffs.** Failures point at the exact
+  nested path that doesn't match.
+- **Parameterized tests** via `@Each`, **flake handling** via
+  `@Retry` / `@Repeat`, **focus mode** via `@Only`, **tag filtering**
+  via `@Tag`.
+- **Custom reporters.** Override per-test/per-run hooks or replace the
+  final summary outright.
+- **Self-contained Lune path.** Ships a runtime shim, a ~115-line Promise
+  impl, and an ANSI-colored reporter — no `@rbxts/promise` needed
+  outside Roblox.
 
 ## Install
 
@@ -92,11 +92,11 @@ Or drop it into `package.json`:
 
 ## Documentation
 
--   [Getting Started](https://github.brandondkong.com/lunit/getting-started) — Roblox, Lune, and both.
--   [Decorators](https://github.brandondkong.com/lunit/guides/decorators) — every decorator, with class-level behavior spelled out.
--   [Writing tests](https://github.brandondkong.com/lunit/guides/writing-tests) — patterns past the basics.
--   [Running under Lune](https://github.brandondkong.com/lunit/guides/lune) — CI, runtime gating, troubleshooting.
--   [API reference](https://github.brandondkong.com/lunit/api-reference)
+- [Getting Started](https://github.brandondkong.com/lunit/getting-started) — Roblox, Lune, and both.
+- [Decorators](https://github.brandondkong.com/lunit/guides/decorators) — every decorator, with class-level behavior spelled out.
+- [Writing tests](https://github.brandondkong.com/lunit/guides/writing-tests) — patterns past the basics.
+- [Running under Lune](https://github.brandondkong.com/lunit/guides/lune) — CI, runtime gating, troubleshooting.
+- [API reference](https://github.brandondkong.com/lunit/api-reference)
 
 ## Contributing
 

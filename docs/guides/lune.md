@@ -11,9 +11,9 @@ test suite also run in CI in milliseconds.
 
 ## Why bother?
 
--   **Speed.** A full Lune run finishes before Studio finishes loading.
--   **CI.** GitHub Actions can run the suite directly; no headless Roblox.
--   **Hermetic.** No DataModel state to clean up between runs.
+- **Speed.** A full Lune run finishes before Studio finishes loading.
+- **CI.** GitHub Actions can run the suite directly; no headless Roblox.
+- **Hermetic.** No DataModel state to clean up between runs.
 
 The catch: anything that touches Roblox APIs (`game:GetService`, `Instance` types,
 `task.wait` semantics that differ from Lune's) won't run under Lune. Use
@@ -40,10 +40,10 @@ lune run node_modules/@rbxts/lunit/scripts/lunit.luau out/tests
 
 Two args, both optional:
 
-| Arg          | Default      | Meaning                                                         |
-| ------------ | ------------ | --------------------------------------------------------------- |
-| `tests-root` | `out/test`   | Directory to walk recursively for `*.test.luau` / `*.spec.luau` |
-| `lunit-root` | `out`        | Directory containing the compiled Lunit framework               |
+| Arg          | Default    | Meaning                                                         |
+| ------------ | ---------- | --------------------------------------------------------------- |
+| `tests-root` | `out/test` | Directory to walk recursively for `*.test.luau` / `*.spec.luau` |
+| `lunit-root` | `out`      | Directory containing the compiled Lunit framework               |
 
 `lunit-root` defaults to your own `out/` because that's where Lunit ends up
 after rbxtsc compiles its dependencies. If you've vendored Lunit somewhere
@@ -77,12 +77,12 @@ Now `pnpm test` (or `npm test`) does the right thing.
 Lunit's npm package bundles four Lune-side helpers under
 `node_modules/@rbxts/lunit/scripts/`:
 
-| File                  | Role                                                                       |
-| --------------------- | -------------------------------------------------------------------------- |
-| `lunit.luau`          | Entry point — auto-discovery + runner                                      |
-| `lune-shim.luau`      | Synthesizes the roblox-ts runtime (`_G[script]`, `TS.import`, etc.)        |
-| `promise.luau`        | Minimal Promise covering only what the framework needs (~115 lines)        |
-| `lune-reporter.luau`  | ANSI-colored output for `PASSED` / `FAILED` / `SKIPPED` and status symbols |
+| File                 | Role                                                                       |
+| -------------------- | -------------------------------------------------------------------------- |
+| `lunit.luau`         | Entry point — auto-discovery + runner                                      |
+| `lune-shim.luau`     | Synthesizes the roblox-ts runtime (`_G[script]`, `TS.import`, etc.)        |
+| `promise.luau`       | Minimal Promise covering only what the framework needs (~115 lines)        |
+| `lune-reporter.luau` | ANSI-colored output for `PASSED` / `FAILED` / `SKIPPED` and status symbols |
 
 You don't need to touch any of these directly — `lunit.luau` requires the
 others as siblings. They exist so the Lune path doesn't drag in

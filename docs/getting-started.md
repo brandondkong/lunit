@@ -105,9 +105,9 @@ Lune output is identical to Roblox's, with ANSI color when stdout is a TTY:
 
 The same `*.test.ts` files work in both runtimes. A common setup:
 
--   **Local + CI:** `pnpm test` runs the suite under Lune in milliseconds.
--   **Studio:** the server script above runs the same tests against the live
-    DataModel for engine-touching cases.
+- **Local + CI:** `pnpm test` runs the suite under Lune in milliseconds.
+- **Studio:** the server script above runs the same tests against the live
+  DataModel for engine-touching cases.
 
 Some tests only make sense in one runtime — gate them with `@Skip` and the
 `Runtime` helper:
@@ -130,12 +130,12 @@ Under Lune this case appears as `SKIPPED`; under Roblox it runs normally.
 
 ## Next steps
 
--   [Decorators](/guides/decorators) — `@Test`, `@BeforeEach`, `@Each`, `@Retry`,
-    `@Only`, `@Tag`, and friends.
--   [Running under Lune](/guides/lune) — deeper Lune setup, CI, runtime gating.
--   [API Reference](/api-reference)
+- [Decorators](/guides/decorators) — `@Test`, `@BeforeEach`, `@Each`, `@Retry`,
+  `@Only`, `@Tag`, and friends.
+- [Running under Lune](/guides/lune) — deeper Lune setup, CI, runtime gating.
+- [API Reference](/api-reference)
 
 ## Resources
 
--   [GitHub](https://github.com/brandon-kong/lunit)
--   [npm](https://www.npmjs.com/package/@rbxts/lunit)
+- [GitHub](https://github.com/brandon-kong/lunit)
+- [npm](https://www.npmjs.com/package/@rbxts/lunit)

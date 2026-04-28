@@ -12,9 +12,9 @@ the codebase readable.
 
 You need:
 
--   **Node 20+** with [pnpm](https://pnpm.io/) (lockfile is `pnpm-lock.yaml`).
--   **[Rokit](https://github.com/rojo-rbx/rokit)** to manage Lune.
-    `rokit install` after cloning picks up the version pinned in `rokit.toml`.
+- **Node 20+** with [pnpm](https://pnpm.io/) (lockfile is `pnpm-lock.yaml`).
+- **[Rokit](https://github.com/rojo-rbx/rokit)** to manage Lune.
+  `rokit install` after cloning picks up the version pinned in `rokit.toml`.
 
 ```bash
 git clone https://github.com/brandon-kong/lunit
@@ -82,27 +82,27 @@ fit one of those should probably be a new top-level subdirectory.
 
 Follow what's already in the file. The existing patterns are:
 
--   **No ambient state.** Decorators read/write metadata stored on the test
-    class constructor. The runner threads everything through arguments.
--   **No emojis or comments-as-checklists in source.** Keep comments to
-    "why this is non-obvious" or load-bearing context.
--   **Public API additions need a test in `lunit/test/`.** The dogfood
-    suite is also the integration test — every PR should leave the same
-    `pnpm test` green it found.
--   **Conventional Commits** for commit messages — the format is
-    `type(scope): description`. Common types: `feat`, `fix`, `refactor`,
-    `docs`, `chore`, `test`, `ci`.
+- **No ambient state.** Decorators read/write metadata stored on the test
+  class constructor. The runner threads everything through arguments.
+- **No emojis or comments-as-checklists in source.** Keep comments to
+  "why this is non-obvious" or load-bearing context.
+- **Public API additions need a test in `lunit/test/`.** The dogfood
+  suite is also the integration test — every PR should leave the same
+  `pnpm test` green it found.
+- **Conventional Commits** for commit messages — the format is
+  `type(scope): description`. Common types: `feat`, `fix`, `refactor`,
+  `docs`, `chore`, `test`, `ci`.
 
 ## What goes into a release
 
 `CHANGELOG.md` follows [Keep a Changelog](https://keepachangelog.com/);
 versioning is [SemVer](https://semver.org/). Roughly:
 
--   **patch** for bug fixes and doc-only changes
--   **minor** for additive features (new decorator, new assertion, new
-    runtime helper)
--   **major** for breaking changes — renaming public API, changing default
-    behavior, removing a decorator
+- **patch** for bug fixes and doc-only changes
+- **minor** for additive features (new decorator, new assertion, new
+  runtime helper)
+- **major** for breaking changes — renaming public API, changing default
+  behavior, removing a decorator
 
 Each PR that lands a feature or fix should add a CHANGELOG entry under
 `[Unreleased]`.
