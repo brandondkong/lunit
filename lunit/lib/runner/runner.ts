@@ -3,6 +3,7 @@ import { getDescendantsOfType } from "../../utils/instance";
 import { TestClassConstructor, TestRunOptions, Constructor, TestRunResult, BaseTestRunResult } from "./types";
 import { getTestSummary } from "../reporter/printer";
 import { TestClassRunner } from "./class";
+import { DEFAULT_ORDER } from "../shared/constants";
 
 const DEFAULT_GLOB_PATTERNS: ReadonlyArray<string> = [".+%.test$", ".+%.spec$"];
 
@@ -101,7 +102,9 @@ export class TestRunner {
 		// REPORTER:onRunStart
 		reporter.onRunStart?.();
 		const focused = this.testClasses.filter((c) => c.getMetadata().only);
-		const classesToRun = focused.size() > 0 ? focused : this.testClasses;
+		const classesToRun = (focused.size() > 0 ? focused : this.testClasses).sort(
+			(a, b) => (a.getMetadata().order ?? DEFAULT_ORDER) < (b.getMetadata().order ?? DEFAULT_ORDER),
+		);
 		for (const testClass of classesToRun) {
 			const classResults = await testClass.runTests(options);
 			this.addResults(results, classResults);

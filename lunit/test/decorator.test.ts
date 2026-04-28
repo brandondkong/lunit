@@ -343,6 +343,102 @@ class TestDecorators {
 	}
 
 	@Test
+	public async classLevelDisabledSkipsEveryTest() {
+		@Disabled("class is off")
+		class Subject {
+			@Test
+			public a() {}
+			@Test
+			public b() {}
+		}
+
+		const result = await runIsolated([Subject]);
+		Assert.equal(result.numTests, 2);
+		Assert.equal(result.numTestsSkipped, 2);
+		Assert.equal(result.numTestsPassed, 0);
+		Assert.equal(result.tests.get(Subject)!.tests[0].errorMessage, "class is off");
+	}
+
+	@Test
+	public async classLevelSkipRespectsCondition() {
+		@Skip(true, "off at class level")
+		class Subject {
+			@Test
+			public a() {}
+		}
+
+		const result = await runIsolated([Subject]);
+		Assert.equal(result.numTestsSkipped, 1);
+	}
+
+	@Test
+	public async classLevelTagPropagatesToEveryTest() {
+		@Tag("integration")
+		class Subject {
+			@Test
+			public a() {}
+			@Test
+			public b() {}
+		}
+
+		const result = await runIsolated([Subject], { tags: ["integration"] });
+		Assert.equal(result.numTests, 2);
+	}
+
+	@Test
+	public async classLevelOrderRunsLowestClassFirst() {
+		const seen: string[] = [];
+
+		@Order(2)
+		class Second {
+			@Test
+			public a() {
+				seen.push("second");
+			}
+		}
+		@Order(1)
+		class First {
+			@Test
+			public a() {
+				seen.push("first");
+			}
+		}
+
+		await runIsolated([Second, First]);
+		Assert.deepEqual(seen, ["first", "second"]);
+	}
+
+	@Test
+	public async classLevelOnlyNarrowsAcrossClasses() {
+		@Only
+		class Focused {
+			@Test
+			public a() {}
+		}
+		class Ignored {
+			@Test
+			public a() {}
+		}
+
+		const result = await runIsolated([Focused, Ignored]);
+		Assert.equal(result.numTests, 1);
+		Assert.notUndefined(result.tests.get(Focused));
+		Assert.undefined(result.tests.get(Ignored));
+	}
+
+	@Test
+	public async classLevelDisplayNameAppearsInResults() {
+		@DisplayName("My Custom Suite")
+		class Subject {
+			@Test
+			public a() {}
+		}
+
+		const result = await runIsolated([Subject]);
+		Assert.notUndefined(result.tests.get(Subject));
+	}
+
+	@Test
 	public async timeoutFailsLongTest() {
 		class Subject {
 			@Timeout(10)

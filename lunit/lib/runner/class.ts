@@ -40,9 +40,6 @@ export class TestClassRunner {
 	public async runTests(options: TestRunOptions): Promise<TestClassRunResult> {
 		const testList = this.getTestsFromTestClass(options.tags ?? []);
 
-		// LIFECYCLE:beforeAll
-		await this.runLifecycleMethod(Lifecycle.RunBeforeAllTests);
-
 		const results: TestClassRunResult = {
 			elapsedTimeMs: 0,
 			numTests: 0,
@@ -51,6 +48,36 @@ export class TestClassRunner {
 			numTestsFailed: 0,
 			tests: [],
 		};
+
+		// Class-level @Disabled / @Skip — surface every test as skipped without
+		// running lifecycle hooks. Honors the optional message on the class.
+		if (this.metadata.disabled?.value) {
+			for (const test of testList) {
+				const cases = test.options.cases;
+				const count = cases !== undefined && cases.size() > 0 ? cases.size() : 1;
+				for (let i = 0; i < count; i++) {
+					const args = cases !== undefined && cases.size() > 0 ? cases[i] : undefined;
+					const idx = cases !== undefined && cases.size() > 0 ? i : undefined;
+					results.tests.push({
+						method: test,
+						label: resolveTestLabel(test, args),
+						passed: false,
+						skipped: true,
+						elapsedTimeMs: 0,
+						errorMessage: this.metadata.disabled.message,
+						caseIndex: idx,
+						caseArgs: args,
+					});
+					results.numTests++;
+					results.numTestsSkipped++;
+				}
+			}
+			return results;
+		}
+
+		// LIFECYCLE:beforeAll
+		await this.runLifecycleMethod(Lifecycle.RunBeforeAllTests);
+
 		for (const test of testList) {
 			const cases = test.options.cases;
 			// Sentinel is `[{}]` not `[undefined]`: Luau collapses `{ nil }` to an empty table,
