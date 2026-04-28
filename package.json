@@ -1,6 +1,6 @@
 {
 	"name": "@rbxts/lunit",
-	"version": "4.0.0",
+	"version": "4.0.1",
 	"main": "out/init.lua",
 	"packageManager": "pnpm@10.33.0",
 	"scripts": {
