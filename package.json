@@ -16,10 +16,19 @@
 		"docs:build": "vitepress build ./docs",
 		"docs:preview": "vitepress preview ./docs"
 	},
-	"keywords": [],
-	"author": "",
+	"keywords": [
+		"roblox",
+		"roblox-ts",
+		"testing",
+		"test-framework",
+		"unit-testing",
+		"lune",
+		"typescript",
+		"decorators"
+	],
+	"author": "Brandon Kong",
 	"license": "MIT",
-	"description": "",
+	"description": "Decorator-driven testing framework for roblox-ts. Runs the same tests in Roblox Studio and under Lune.",
 	"types": "out/index.d.ts",
 	"files": [
 		"out",
