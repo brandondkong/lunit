@@ -4,366 +4,351 @@ outline: deep
 
 # Decorators
 
-Decorators are a way to modify or extend the behavior of functions or methods. They are a form of metaprogramming and are used to add functionality to existing code. Decorators are a powerful tool in TypeScript, and they can be used to simplify code, make it more readable, and reduce redundancy.
-
-## Overview
-
-### Usage
-
-Lunit provides several decorators that can be used to define test cases and test suites. These decorators are used to mark functions as test cases or test suites and to define the behavior of the tests.
-
-### Example
-
-Here is an example of how you can use decorators to define test cases in Lunit:
+Lunit's API surface is decorators. You attach them to test classes (and the
+methods inside) to declare intent — what's a test, what's setup, what to
+skip — without writing any registration boilerplate.
 
 ```ts
-import { Test, Assert } from "@rbxts/lunit";
+import { Test, BeforeEach, Assert } from "@rbxts/lunit";
 
 class TestSum {
+	private value = 0;
+
+	@BeforeEach
+	public reset() {
+		this.value = 0;
+	}
+
 	@Test
 	public addsTwoNumbers() {
-		Assert.equals(1 + 1, 2);
+		this.value = 1 + 1;
+		Assert.equal(this.value, 2);
 	}
 }
 
 export = TestSum;
 ```
 
-In this example, the `@Test` decorator is used to mark the `addsTwoNumbers` function as a test case. The `Assert.equals` function is used to check that `1 + 1` equals `2`.
+Decorators come in two flavors:
 
-## Decorators
+-   **Method-only** (`@Test`, `@BeforeEach`, `@Timeout`, `@Each`, `@Retry`,
+    `@Repeat`, `@Negated`) — apply to a single method.
+-   **Shared** (`@DisplayName`, `@Order`, `@Tag`, `@Skip`, `@Disabled`, `@Only`)
+    — apply to either a method or the whole class. When placed on the class,
+    every test inside inherits the behavior.
+
+## Marking tests
 
 ### `@Test`
 
-The `@Test` decorator is used to mark a function as a test case. Test cases are functions that contain the actual test logic and assertions.
+Marks a method as a test case. A class is only run if it has at least one
+`@Test` method.
 
 ```ts
 class TestSum {
 	@Test
 	public addsTwoNumbers() {
-		Assert.equals(1 + 1, 2);
+		Assert.equal(1 + 1, 2);
 	}
 }
 ```
 
-### `@Before`
+## Lifecycle hooks
 
-The `@Before` decorator is used to mark a function that should be run before each test case in a test suite. This function is typically used to set up the test environment or perform any necessary setup tasks.
+Each hook fires around every `@Test` method on the class. State you mutate
+in `@BeforeEach` is visible inside the test; state from `@AfterEach` runs
+even if the test failed.
+
+### `@BeforeAll`
+
+Runs once before any test in the class.
 
 ```ts
-class TestSum {
-	@Before
-	public setUp() {
-		// Set up the test environment
-	}
-
-	@Test
-	public addsTwoNumbers() {
-		Assert.equals(1 + 1, 2);
+class TestDatabase {
+	@BeforeAll
+	public connect() {
+		// open a shared resource
 	}
 }
 ```
 
----
+### `@AfterAll`
 
-### `@BeforeEach`
+Runs once after every test in the class has finished, pass or fail.
 
-The `@BeforeEach` decorator is used to mark a function that should be run before each test case in a test suite. This function is typically used to set up the test environment or perform any necessary setup tasks.
+```ts
+class TestDatabase {
+	@AfterAll
+	public disconnect() {
+		// close the shared resource
+	}
+}
+```
 
-> This has the same effect as `@Before`.
+### `@BeforeEach` / `@Before`
+
+Runs before each test. `@Before` is an alias.
 
 ```ts
 class TestSum {
+	private value = 0;
+
 	@BeforeEach
-	public setUp() {
-		// Set up the test environment
-	}
-
-	@Test
-	public addsTwoNumbers() {
-		Assert.equals(1 + 1, 2);
+	public reset() {
+		this.value = 0;
 	}
 }
 ```
 
----
+### `@AfterEach` / `@After`
 
-### `@After`
-
-The `@After` decorator is used to mark a function that should be run after each test case in a test suite. This function is typically used to clean up the test environment or perform any necessary teardown tasks.
-
-```ts
-class TestSum {
-	@After
-	public tearDown() {
-		// Clean up the test environment
-	}
-
-	@Test
-	public addsTwoNumbers() {
-		Assert.equals(1 + 1, 2);
-	}
-}
-```
-
----
-
-### `@AfterEach`
-
-The `@AfterEach` decorator is used to mark a function that should be run after each test case in a test suite. This function is typically used to clean up the test environment or perform any necessary teardown tasks.
-
-> This has the same effect as `@After`.
+Runs after each test. `@After` is an alias.
 
 ```ts
 class TestSum {
 	@AfterEach
-	public tearDown() {
-		// Clean up the test environment
-	}
-
-	@Test
-	public addsTwoNumbers() {
-		Assert.equals(1 + 1, 2);
+	public cleanup() {
+		// per-test teardown
 	}
 }
 ```
 
----
-
-### `@BeforeAll`
-
-The `@BeforeAll` decorator is used to mark a function that should be run before all test cases in a test suite. This function is typically used to set up the test environment or perform any necessary setup tasks that only need to be done once.
-
-```ts
-class TestSum {
-	@BeforeAll
-	public static setUpAll() {
-		// Set up the test environment
-	}
-
-	@Test
-	public addsTwoNumbers() {
-		Assert.equals(1 + 1, 2);
-	}
-}
-```
-
----
-
-### `@AfterAll`
-
-The `@AfterAll` decorator is used to mark a function that should be run after all test cases in a test suite. This function is typically used to clean up the test environment or perform any necessary teardown tasks that only need to be done once.
-
-```ts
-class TestSum {
-	@AfterAll
-	public static tearDownAll() {
-		// Clean up the test environment
-	}
-
-	@Test
-	public addsTwoNumbers() {
-		Assert.equals(1 + 1, 2);
-	}
-}
-```
-
----
+## Skipping & disabling
 
 ### `@Disabled`
 
-The `@Disabled` decorator is used to mark a test case as disabled. Disabled test cases are not run when the test suite is executed. This can be useful when you want to temporarily disable a test case without deleting it.
-
-This decorator takes an optional message parameter that can be used to provide a reason for disabling the test case.
+Marks a test (or every test on the class) as skipped. Optional message
+appears in the report.
 
 ```ts
 class TestSum {
-	@Disabled("This test case is disabled because it is not yet implemented")
-	public disabledTest() {
-		// This test case will not be run
-	}
-
+	@Disabled("not implemented yet")
 	@Test
-	public addsTwoNumbers() {
-		Assert.equals(1 + 1, 2);
-	}
-}
-```
-
----
-
-### `@DisplayName`
-
-The `@DisplayName` decorator is used to provide a custom display name for a test case. By default, the display name of a test case is the name of the function that contains the test logic. You can use the `@DisplayName` decorator to provide a more descriptive name for the test case.
-
-```ts
-class TestSum {
-	@DisplayName("Adding two numbers should return the sum")
-	public addsTwoNumbers() {
-		Assert.equals(1 + 1, 2);
-	}
-}
-```
-
----
-
-### `@Timeout`
-
-The `@Timeout` decorator is used to set a timeout for a test case. If the test case takes longer than the specified timeout to complete, it will be marked as failed.
-
-This decorator takes a timeout value in milliseconds as a parameter.
-
-```ts
-class TestSum {
-	@Timeout(1000)
-	public slowTest() {
-		// This test case will fail if it takes longer than 1 second to complete
-	}
-}
-```
-
----
-
-### `@Negated`
-
-The `@Negated` decorator is used to flip the result of a test case. If the test case would normally pass, it will be marked as failed, and if it would normally fail, it will be marked as passed.
-
-```ts
-class TestSum {
-	@Test
-	@Negated
-	public notEquals() {
-		Assert.notEquals(1 + 1, 3);
-	} // This test case will pass
-}
-```
-
-The `@Negated` decorator can be powerful when combined with other decorators, such as [`@Timeout`](#timeout) to create complex test cases.
-
-For example, you can use the `@Negated` decorator to create a test case that should fail if it takes longer than a certain amount of time to complete:
-
-```ts
-class TestSum {
-	@Test
-	@Timeout(1000)
-	@Negated
-	public slowTest() {
-		// This test case will pass if it takes longer than 1 second to complete
-	}
-}
-```
-
----
-
-### `@Tag`
-
-The `@Tag` decorator is used to assign tags to test cases. Tags are used to categorize test cases and make it easier to filter and run specific groups of tests.
-
-This decorator takes one or more tag names as parameters.
-
-```ts
-class TestSum {
-	@Tag("math", "addition")
-	public addsTwoNumbers() {
-		Assert.equals(1 + 1, 2);
-	}
-}
-```
-
-When running the test suite, you can use the tags to filter the test cases that you want to run:
-
-```ts
-import { TestRunner } from "@rbxts/lunit";
-
-const testRunner = new TestRunner([TestSum]);
-
-testRunner.run({
-	tags: ["math"],
-});
-```
-
-In this example, only the test cases with the `math` tag will be run.
-
----
-
-### `@Server`
-
-The `@Server` decorator is used to mark a test case as a server test case. Server test cases can only be ran on the server side of the Roblox game engine. This can be useful when you want to test server-specific functionality or interactions.
-
-```ts
-class TestSum {
-	@Server
-	public serverTest() {
-		// This test case will only run on the server side
-	}
-}
-```
-
-If you do not specify a test case as a server test case, it will run on either the client or server side, depending on the context in which the test suite is executed.
-
-If you run a test suite with server test cases on the client side, the server test cases will be skipped.
-
----
-
-### `@Client`
-
-The `@Client` decorator is used to mark a test case as a client test case. Client test cases can only be ran on the client side of the Roblox game engine. This can be useful when you want to test client-specific functionality or interactions.
-
-```ts
-class TestSum {
-	@Client
-	public clientTest() {
-		// This test case will only run on the client side
-	}
-}
-```
-
-If you do not specify a test case as a client test case, it will run on either the client or server side, depending on the context in which the test suite is executed.
-
-If you run a test suite with client test cases on the server side, the client test cases will be skipped.
-
-### `@Order`
-
-The `@Order` decorator is used to specify the order in which test cases should be run within a test suite. By default, test cases are ran in an arbitrary order. You can use the `@Order` decorator to override this default order.
-
-This decorator takes an order value as a parameter. Test cases are ran in ascending order of their order values.
-
-```ts
-class TestSum {
-	@Order(1)
-	public test1() {
-		// This test case will be ran first
-	}
-
-	@Order(2)
-	public test2() {
-		// This test case will be ran second
-	}
+	public unfinishedTest() {}
 }
 ```
 
 ### `@Skip`
 
-The `@Skip` decorator is used to skip a test case based on a condition. This can be useful when you want to skip a test case based on certain criteria, such as the environment in which the test suite is executed.
-
-This decorator takes a `boolean` OR a `condition function` as a parameter. The condition function should return a boolean value that determines whether the test case should be skipped.
-
-A second parameter can be provided to specify a message that explains why the test case was skipped.
+Skips a test conditionally. Takes a `boolean` or a function returning one,
+plus an optional message. Useful for runtime-gating with the `Runtime` helper:
 
 ```ts
-const RUN_TESTS = false;
+import { Skip, Test, Runtime, Assert } from "@rbxts/lunit";
 
-class TestSum {
-	@Skip(RUN_TESTS) // This test case will be ran if RUN_TESTS is false
-	public windowsOnlyTest() {
-		// This test case will be skipped on Windows
+class TestServices {
+	@Skip(!Runtime.isRoblox(), "Roblox only")
+	@Test
+	public touchesRunService() {
+		// runs in Studio; SKIPPED under Lune
 	}
 
-	@Skip(() => !RUN_TESTS, "This test case is disabled because  !RUN_TESTS is true, so it will be skipped")
-	public disabledTest() {
-		// This test case will be skipped
+	@Skip(() => os.clock() < 0, "never true, but evaluated lazily")
+	@Test
+	public lazyCondition() {}
+}
+```
+
+The condition is evaluated when the runner reads the test list, so a
+function form lets you defer expensive checks.
+
+## Display & ordering
+
+### `@DisplayName`
+
+Overrides how the test shows up in the report. Useful when the method name
+is awkward in prose.
+
+```ts
+class TestSum {
+	@DisplayName("adds two positive numbers")
+	@Test
+	public addsTwoNumbers() {
+		Assert.equal(1 + 1, 2);
 	}
 }
 ```
 
-#
+### `@Order`
+
+Sets execution order within a class. Tests with lower order run first.
+Tests without `@Order` use the framework's default (which currently sorts
+them after explicitly-ordered ones; don't rely on relative order between
+unmarked tests).
+
+```ts
+class TestSum {
+	@Order(1)
+	@Test
+	public first() {}
+
+	@Order(2)
+	@Test
+	public second() {}
+}
+```
+
+## Filtering
+
+### `@Tag`
+
+Attaches one or more tags. Tags are used by the runner to filter which
+tests to actually run.
+
+```ts
+class TestSum {
+	@Tag("smoke", "math")
+	@Test
+	public addsTwoNumbers() {
+		Assert.equal(1 + 1, 2);
+	}
+}
+```
+
+```ts
+import { TestRunner } from "@rbxts/lunit";
+
+await TestRunner.fromClasses([TestSum]).run({ tags: ["smoke"] });
+```
+
+A test runs if **any** of its tags (or its class's tags) matches **any**
+of the requested tags. Pass no `tags` and everything runs.
+
+### `@Only`
+
+Focus mode. When any test or class is `@Only`, only those run; everything
+else is implicitly skipped. Method-level `@Only` narrows within a class;
+class-level `@Only` narrows across the whole run.
+
+```ts
+class TestSum {
+	@Only
+	@Test
+	public theOneIcareAbout() {}
+
+	@Test
+	public ignoredWhileOnlyIsActive() {}
+}
+```
+
+Convenient for iterating on a single test. Pull the `@Only` before
+committing — Lunit doesn't warn about leftover focus markers.
+
+## Flake handling
+
+### `@Retry`
+
+Re-runs a failing test up to `count` extra times. The first passing
+attempt wins; lifecycle hooks (`@BeforeEach` / `@AfterEach`) fire fresh
+for every attempt.
+
+```ts
+class TestNetwork {
+	@Retry(3)
+	@Test
+	public flakyHttpCall() {
+		// up to 4 total attempts
+	}
+}
+```
+
+Use sparingly — retries hide signal. Reserve for genuinely external
+flake (network, timing) rather than papering over bugs.
+
+### `@Repeat`
+
+Runs a test `count` times. Any failed iteration fails the test. Lifecycle
+hooks fire for every iteration. Pairs with race-condition or
+property-style testing.
+
+```ts
+class TestRace {
+	@Repeat(50)
+	@Test
+	public raceConditionCheck() {
+		// runs 50 times, fails the test if any iteration trips
+	}
+}
+```
+
+`@Retry` and `@Repeat` compose — `@Repeat(10) @Retry(2)` runs ten
+iterations, each of which gets up to two extra attempts before the
+iteration counts as failed.
+
+## Parameterized tests
+
+### `@Each`
+
+Runs the same test method once per row, with the row's values spread as
+arguments. Each row produces an independent test result with a labeled
+case suffix.
+
+```ts
+class TestAddition {
+	@Each([
+		[1, 2, 3],
+		[10, 20, 30],
+		[-1, 1, 0],
+	])
+	@Test
+	public addition(a: number, b: number, sum: number) {
+		Assert.equal(a + b, sum);
+	}
+}
+```
+
+Output:
+
+```plaintext
+[✓] TestAddition (1ms)
+ │	├── [✓] addition (1, 2, 3) (0ms) PASSED
+ │	├── [✓] addition (10, 20, 30) (0ms) PASSED
+ │	└── [✓] addition (-1, 1, 0) (0ms) PASSED
+```
+
+## Misc
+
+### `@Timeout`
+
+Fails the test if it doesn't complete within `ms` milliseconds. The test
+keeps running in the background even after the timeout fires — your
+asserts simply don't observe it.
+
+```ts
+class TestSlow {
+	@Timeout(500)
+	@Test
+	public async fastEnough() {
+		await Promise.delay(0.1); // succeeds (100ms < 500ms)
+	}
+}
+```
+
+Timeouts only fire if the test yields. A busy CPU loop won't get
+interrupted; use `task.wait` or await a `Promise.delay` to give the
+scheduler a chance.
+
+### `@Negated`
+
+Flips the test's pass/fail result. Useful for testing assertions
+themselves, or pairing with `@Timeout` to assert "this should be slow."
+
+```ts
+class TestNegation {
+	@Negated
+	@Test
+	public expectedToFail() {
+		error("boom"); // passes — error was expected
+	}
+
+	@Negated
+	@Timeout(100)
+	@Test
+	public expectedToTimeout() {
+		while (true) task.wait(); // passes — timeout was expected
+	}
+}
+```
+
+Reach for `@Negated` rarely; `Assert.throws` is usually a clearer way to
+assert "this should error."
