@@ -17,7 +17,7 @@ local testsRoot = process.args[1] or "out/test"
 local lunitRoot = process.args[2] or "out"
 
 local function isTestFile(name)
-	return name:match("%.test%.luau$") ~= nil
+	return name:match("%.test%.luau$") ~= nil or name:match("%.spec%.luau$") ~= nil
 end
 
 local function discover(root, found)

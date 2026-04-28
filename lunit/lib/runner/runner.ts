@@ -4,12 +4,18 @@ import { TestClassConstructor, TestRunOptions, Constructor, TestRunResult, BaseT
 import { getTestSummary } from "../reporter/printer";
 import { TestClassRunner } from "./class";
 
-const DEFAULT_GLOB_PATTERN = ".+%.test$";
+const DEFAULT_GLOB_PATTERNS: ReadonlyArray<string> = [".+%.test$", ".+%.spec$"];
+
+type GlobPattern = string | ReadonlyArray<string>;
+
+function normalizePatterns(input: GlobPattern): ReadonlyArray<string> {
+	return typeIs(input, "string") ? [input] : input;
+}
 
 export class TestRunner {
 	private testClasses: TestClassRunner[] = [];
 
-	public constructor(roots: ReadonlyArray<Instance | undefined> = [], globPattern: string = DEFAULT_GLOB_PATTERN) {
+	public constructor(roots: ReadonlyArray<Instance | undefined> = [], globPattern: GlobPattern = DEFAULT_GLOB_PATTERNS) {
 		for (const root of roots) {
 			if (root !== undefined) this.addRoot(root, globPattern);
 		}
@@ -35,10 +41,11 @@ export class TestRunner {
 		return runner;
 	}
 
-	public addRoot(root: Instance, globPattern: string = DEFAULT_GLOB_PATTERN): this {
+	public addRoot(root: Instance, globPattern: GlobPattern = DEFAULT_GLOB_PATTERNS): this {
+		const patterns = normalizePatterns(globPattern);
 		const modules = getDescendantsOfType(root, "ModuleScript");
 		modules.forEach((module) => {
-			if (module.Name.match(globPattern) !== undefined) {
+			if (patterns.some((p) => module.Name.match(p)[0] !== undefined)) {
 				try {
 					const testClass = require(module) as Constructor;
 					this.tryAddClass(testClass, module.Name);
