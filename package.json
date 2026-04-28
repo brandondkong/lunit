@@ -10,7 +10,7 @@
 		"test": "npm run build && lune run ./scripts/lunit.luau",
 		"lint": "eslint",
 		"format": "prettier --write .",
-		"install-test": "pnpm run build && pnpm pack --out test/rbxts-lunit.tgz && cd test && npm install",
+		"install-test": "pnpm run build && pnpm pack --out test/rbxts-lunit.tgz && cd test && npm install --no-package-lock",
 		"docs:dev": "vitepress dev ./docs",
 		"docs:build": "vitepress build ./docs",
 		"docs:preview": "vitepress preview ./docs"
