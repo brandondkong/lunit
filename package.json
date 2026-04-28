@@ -1,6 +1,6 @@
 {
 	"name": "@rbxts/lunit",
-	"version": "4.0.1",
+	"version": "4.0.2",
 	"main": "out/init.lua",
 	"packageManager": "pnpm@10.33.0",
 	"scripts": {
@@ -41,9 +41,9 @@
 		"access": "public"
 	},
 	"repository": {
-		"url": "https://github.com/brandon-kong/lunit"
+		"url": "https://github.com/brandondkong/lunit"
 	},
-	"homepage": "https://github.brandondkong.com/lunit",
+	"homepage": "https://git.kong.ly/lunit",
 	"devDependencies": {
 		"@rbxts/compiler-types": "^3.0.0-types.0",
 		"@rbxts/types": "^1.0.916",
