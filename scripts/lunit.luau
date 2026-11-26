@@ -3,12 +3,14 @@
 -- and runs them through the compiled Lunit at `lunit-root`. Exits non-zero
 -- if any test fails so it composes with CI.
 --
--- Usage: lune run lunit.luau [tests-root] [lunit-root] [--project <file>]
+-- Usage: lune run lunit.luau [tests-root] [lunit-root] [--project <file>] [--setup <file>]
 --   tests-root  default: out/test
 --   lunit-root  default: node_modules/@rbxts/lunit/out, else the `out` folder
 --               next to this script
 --   --project   Rojo project file used to resolve game:GetService(...) imports.
 --               default: default.project.json
+--   --setup     Luau file run before any test loads, for project-specific
+--               stand-ins. default: lunit.setup.luau, when it exists
 
 local fs = require("@lune/fs")
 local process = require("@lune/process")
@@ -17,15 +19,18 @@ local shim = require("./lune-shim")
 local reporter = require("./lune-reporter")
 
 local positional = {}
+local setupFile = nil
 local i = 1
 while i <= #process.args do
 	local arg = process.args[i]
-	if arg == "--project" then
+	if arg == "--project" or arg == "--setup" then
 		local path = process.args[i + 1]
 		if path == nil then
-			error("--project needs a file path")
+			error(arg .. " needs a file path")
 		end
-		if not shim.loadProject(path) then
+		if arg == "--setup" then
+			setupFile = path
+		elseif not shim.loadProject(path) then
 			error("project file not found: " .. path)
 		end
 		i += 2
@@ -33,6 +38,14 @@ while i <= #process.args do
 		table.insert(positional, arg)
 		i += 1
 	end
+end
+
+shim.useDefaultProject()
+if setupFile == nil and fs.isFile("lunit.setup.luau") then
+	setupFile = "lunit.setup.luau"
+end
+if setupFile ~= nil then
+	shim.runSetup(setupFile)
 end
 
 -- The `out` folder of the package that holds this script. Resolves to `out`
