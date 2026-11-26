@@ -39,7 +39,7 @@ export = TestSum;
   with no setup boilerplate.
 - **Roblox + Lune.** The same files run in Studio (DataModel discovery)
   and under [Lune](https://lune-org.github.io/docs/) (filesystem
-  discovery). Gate runtime-specific cases with `@Skip` + `Runtime`.
+  discovery). Mark runtime-specific cases with `@Tag("Roblox")` or `@Tag("Lune")`.
 - **Path-annotated `deepEqual` diffs.** Failures point at the exact
   nested path that doesn't match.
 - **Parameterized tests** via `@Each`, **flake handling** via
@@ -74,10 +74,11 @@ import { ReplicatedStorage } from "@rbxts/services";
 new TestRunner([ReplicatedStorage.FindFirstChild("Tests")]).run();
 ```
 
-**Under Lune** — point the bundled runner at your compiled tests:
+**Under Lune** — run the bundled `lunit` command after your build. It finds
+every `*.test` / `*.spec` file under `out/`:
 
 ```sh
-lune run node_modules/@rbxts/lunit/scripts/lunit.luau out/tests
+npx lunit
 ```
 
 Or drop it into `package.json`:
@@ -85,10 +86,13 @@ Or drop it into `package.json`:
 ```json
 {
 	"scripts": {
-		"test": "rbxtsc && lune run node_modules/@rbxts/lunit/scripts/lunit.luau out/tests"
+		"test": "rbxtsc && lunit"
 	}
 }
 ```
+
+`lunit --help` lists the options: `--filter`, `--tag`, `--exclude-tag`,
+`--bail` and more.
 
 ## Documentation
 

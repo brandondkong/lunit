@@ -4,6 +4,37 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`lunit` command.** `npx lunit` (or `lunit` in a `package.json` script)
+  runs the Lune runner, in place of
+  `lune run node_modules/@rbxts/lunit/scripts/lunit.luau`. It passes every
+  argument through and needs `lune` on `PATH`.
+- **Run options.** `TestRunOptions` gains `excludeTags`, `filter` (plain text,
+  matched against `Class.method` and display names) and `bail`. The Lune
+  runner exposes them, with `tags`, as `--exclude-tag`, `--filter`, `--tag`
+  and `--bail`. `lunit --help` lists every option.
+- **Runtime tags.** `@Tag("Lune")` and `@Tag("Roblox")` (or `"Studio"`) run a
+  test or class only in that runtime. In the other runtime it is skipped with
+  `Lune only` / `Roblox only`, and its lifecycle hooks do not run.
+
+### Changed
+
+- The Lune runner's `tests-root` default is now `out` (was `out/test`), so
+  `lunit` with no arguments finds tests anywhere in the build output.
+- With `tags`, `excludeTags` or `filter` set, classes left with no tests are
+  not reported.
+
+### Fixed
+
+- The report showed no `SKIPPED` label or reason for tests skipped by a
+  class-level `@Disabled` / `@Skip`. It now uses each result's skip reason.
+- `@Negated` messages were swapped: a negated test that failed had an empty
+  message, and one that passed had "unexpectedly did not error". A skipped
+  negated test also lost its skip reason.
+
 ## [4.1.0] - 2026-11-26
 
 ### Added

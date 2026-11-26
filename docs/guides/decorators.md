@@ -268,7 +268,27 @@ await TestRunner.fromClasses([TestSum]).run({ tags: ["smoke"] });
 ```
 
 A test runs if **any** of its tags (or its class's tags) matches **any**
-of the requested tags. Pass no `tags` and everything runs.
+of the requested tags. Pass no `tags` and everything runs. `excludeTags`
+does the opposite: a test with any of those tags is left out.
+
+```ts
+await TestRunner.fromClasses([TestSum]).run({ excludeTags: ["slow"] });
+```
+
+Under Lune, the same filters are `lunit --tag smoke` and
+`lunit --exclude-tag slow`.
+
+**Runtime tags.** `"Lune"` and `"Roblox"` (or `"Studio"`) are special: a test
+with one of them runs only in that runtime, and is skipped in the other with
+the reason `Lune only` / `Roblox only`. Its lifecycle hooks do not run.
+
+```ts
+class TestRemotes {
+	@Tag("Roblox")
+	@Test
+	public firesRemoteEvent() {} // SKIPPED (Roblox only) under Lune
+}
+```
 
 **On a class:** every test in the class inherits the class's tags. Useful
 for tagging an entire suite as `integration` or `slow` without

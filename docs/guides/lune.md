@@ -32,22 +32,39 @@ Or grab a binary release from [lune-org/lune](https://github.com/lune-org/lune/r
 
 ## Run the suite
 
-After your TypeScript build (rbxtsc / `pnpm build`), point Lunit's runner at
-the compiled tests:
+After your TypeScript build (rbxtsc / `pnpm build`), run the `lunit` command
+from your project root:
 
 ```bash
-lune run node_modules/@rbxts/lunit/scripts/lunit.luau out/tests
+npx lunit
 ```
+
+`lunit` is a small Node wrapper that runs
+`lune run node_modules/@rbxts/lunit/scripts/lunit.luau` with your arguments.
+It needs `lune` on `PATH`.
 
 All arguments are optional:
 
-| Arg                | Default                         | Meaning                                                                     |
-| ------------------ | ------------------------------- | --------------------------------------------------------------------------- |
-| `tests-root`       | `out/test`                      | Directory to walk recursively for `*.test.luau` / `*.spec.luau` (or `.lua`) |
-| `lunit-root`       | `node_modules/@rbxts/lunit/out` | Directory containing the compiled Lunit framework                           |
-| `--project <file>` | `default.project.json`          | Rojo project file used to resolve `game:GetService(...)` imports            |
+| Arg                   | Default                         | Meaning                                                                     |
+| --------------------- | ------------------------------- | --------------------------------------------------------------------------- |
+| `tests-root`          | `out`                           | Directory to walk recursively for `*.test.luau` / `*.spec.luau` (or `.lua`) |
+| `lunit-root`          | `node_modules/@rbxts/lunit/out` | Directory containing the compiled Lunit framework                           |
+| `--filter <text>`     |                                 | Run only tests whose `Class.method` or display name contains `<text>`       |
+| `--tag <tag>`         |                                 | Run only tests with this tag. Repeat it, or separate tags with commas       |
+| `--exclude-tag <tag>` |                                 | Leave out tests with this tag. Repeat it, or separate tags with commas      |
+| `--bail`              |                                 | Stop after the first failing test                                           |
+| `--project <file>`    | `default.project.json`          | Rojo project file used to resolve `game:GetService(...)` imports            |
+| `--setup <file>`      | `lunit.setup.luau`, if present  | Setup file run before tests load (see [Setup file](#setup-file))            |
 
-You only need `lunit-root` if you've vendored Lunit somewhere else.
+You only need `lunit-root` if you've vendored Lunit somewhere else. Flags
+also accept `--flag=value`. `lunit --help` prints this list.
+
+```bash
+npx lunit --filter TestInventory          # one class
+npx lunit --filter TestInventory.addsItem # one test
+npx lunit --tag smoke --bail              # smoke tests, stop at the first failure
+npx lunit --exclude-tag slow,integration  # everything but slow and integration tests
+```
 
 The runner exits non-zero on any failure, so it composes with CI:
 
@@ -56,7 +73,7 @@ The runner exits non-zero on any failure, so it composes with CI:
 - run: pnpm install --frozen-lockfile
 - run: pnpm run build
 - uses: CompeyDev/setup-rokit@v0.1.2
-- run: lune run node_modules/@rbxts/lunit/scripts/lunit.luau out/tests
+- run: npx lunit
 ```
 
 ## Game projects
@@ -77,7 +94,7 @@ file, as Rojo does. For example, `ReplicatedStorage.TS` holds the modules in
 `--project`:
 
 ```bash
-lune run node_modules/@rbxts/lunit/scripts/lunit.luau out --project dev.project.json
+npx lunit --project dev.project.json
 ```
 
 Package projects (`_G[script]` output) need no project file.
@@ -151,7 +168,7 @@ end
 {
 	"scripts": {
 		"build": "rbxtsc",
-		"test": "rbxtsc && lune run node_modules/@rbxts/lunit/scripts/lunit.luau out/tests"
+		"test": "rbxtsc && lunit"
 	}
 }
 ```
@@ -160,43 +177,55 @@ Now `pnpm test` (or `npm test`) does the right thing.
 
 ## What's actually shipped
 
-Lunit's npm package bundles four Lune-side helpers under
+Lunit's npm package bundles these Lune-side helpers under
 `node_modules/@rbxts/lunit/scripts/`:
 
 | File                 | Role                                                                       |
 | -------------------- | -------------------------------------------------------------------------- |
+| `cli.js`             | The `lunit` command; runs `lunit.luau` with Lune                           |
 | `lunit.luau`         | Entry point — auto-discovery + runner                                      |
 | `lune-shim.luau`     | Builds the DataModel and the roblox-ts runtime (`_G[script]`, RuntimeLib)  |
 | `promise.luau`       | Minimal Promise covering only what the framework needs (~115 lines)        |
 | `lune-reporter.luau` | ANSI-colored output for `PASSED` / `FAILED` / `SKIPPED` and status symbols |
 
 You don't need to touch any of these directly — `lunit.luau` requires the
-others as siblings. They exist so the Lune path doesn't drag in
+Luau files as siblings. They exist so the Lune path doesn't drag in
 `@rbxts/promise` (~2000 lines, Roblox-coupled).
 
 ## Gating tests by runtime
 
-Some tests only make sense in one runtime. `Runtime.isRoblox()` /
-`Runtime.isLune()` paired with `@Skip` is the idiomatic gate:
+Some tests only make sense in one runtime. Tag them with the runtime they need:
 
 ```ts
-import { Skip, Test, Runtime, Assert } from "@rbxts/lunit";
+import { Tag, Test } from "@rbxts/lunit";
 
 class TestServices {
-	@Skip(!Runtime.isRoblox(), "Roblox only")
+	@Tag("Roblox")
 	@Test
-	public touchesRunService() {
-		// uses game:GetService("RunService"); skipped under Lune
+	public firesRemoteEvent() {
+		// skipped under Lune: "SKIPPED (Roblox only)"
 	}
 
-	@Skip(!Runtime.isLune(), "Lune only")
+	@Tag("Lune")
 	@Test
 	public usesLuneFs() {
-		// uses @lune/fs; skipped under Roblox
+		// skipped under Roblox: "SKIPPED (Lune only)"
 	}
 }
 
 export = TestServices;
+```
+
+`"Studio"` works the same as `"Roblox"`. A runtime tag on a class applies to
+every test in it. A test skipped this way does not run its `@BeforeEach` /
+`@AfterEach` hooks, and a skipped class does not run `@BeforeAll` /
+`@AfterAll`, since those may call APIs that the other runtime lacks.
+
+For other conditions, `@Skip` with `Runtime.isRoblox()` / `Runtime.isLune()`
+still works:
+
+```ts
+@Skip(!Runtime.isRoblox(), "needs a live server")
 ```
 
 A `SKIPPED` line in the output makes the gating visible — silent skips would
