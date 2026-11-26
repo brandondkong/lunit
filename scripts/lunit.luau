@@ -3,21 +3,67 @@
 -- and runs them through the compiled Lunit at `lunit-root`. Exits non-zero
 -- if any test fails so it composes with CI.
 --
--- Usage: lune run lunit.luau [tests-root] [lunit-root]
+-- Usage: lune run lunit.luau [tests-root] [lunit-root] [--project <file>]
 --   tests-root  default: out/test
---   lunit-root  default: out
+--   lunit-root  default: node_modules/@rbxts/lunit/out, else the `out` folder
+--               next to this script
+--   --project   Rojo project file used to resolve game:GetService(...) imports.
+--               default: default.project.json
 
 local fs = require("@lune/fs")
 local process = require("@lune/process")
 
-local rbxRequire = require("./lune-shim")
+local shim = require("./lune-shim")
 local reporter = require("./lune-reporter")
 
-local testsRoot = process.args[1] or "out/test"
-local lunitRoot = process.args[2] or "out"
+local positional = {}
+local i = 1
+while i <= #process.args do
+	local arg = process.args[i]
+	if arg == "--project" then
+		local path = process.args[i + 1]
+		if path == nil then
+			error("--project needs a file path")
+		end
+		if not shim.loadProject(path) then
+			error("project file not found: " .. path)
+		end
+		i += 2
+	else
+		table.insert(positional, arg)
+		i += 1
+	end
+end
+
+-- The `out` folder of the package that holds this script. Resolves to `out`
+-- when Lunit runs its own suite.
+local function packageOut()
+	local source = string.gsub(debug.info(1, "s"), "\\", "/")
+	local root = string.match(source, "^(.*)/scripts/lunit$") or "."
+	local cwd = string.gsub(string.gsub(process.cwd, "\\", "/"), "/+$", "")
+	if root == cwd then
+		return "out"
+	elseif string.sub(root, 1, #cwd + 1) == cwd .. "/" then
+		root = string.sub(root, #cwd + 2)
+	end
+	return root .. "/out"
+end
+
+local function defaultLunitRoot()
+	-- Prefer the path that Rojo mounts, so that the runner and the tests load
+	-- the same copy of Lunit.
+	local installed = "node_modules/@rbxts/lunit/out"
+	if fs.isFile(installed .. "/init.luau") or fs.isFile(installed .. "/init.lua") then
+		return installed
+	end
+	return packageOut()
+end
+
+local testsRoot = positional[1] or "out/test"
+local lunitRoot = positional[2] or defaultLunitRoot()
 
 local function isTestFile(name)
-	return name:match("%.test%.luau$") ~= nil or name:match("%.spec%.luau$") ~= nil
+	return name:match("%.test%.luau?$") ~= nil or name:match("%.spec%.luau?$") ~= nil
 end
 
 local function discover(root, found)
@@ -29,17 +75,17 @@ local function discover(root, found)
 		if fs.isDir(path) then
 			discover(path, found)
 		elseif isTestFile(name) then
-			table.insert(found, (path:gsub("%.luau$", "")))
+			table.insert(found, (path:gsub("%.luau?$", "")))
 		end
 	end
 	return found
 end
 
-local lunit = rbxRequire(lunitRoot)
+local lunit = shim(lunitRoot)
 
 local classes = {}
 for _, modulePath in ipairs(discover(testsRoot, {})) do
-	local cls = rbxRequire(modulePath)
+	local cls = shim(modulePath)
 	if cls ~= nil then
 		table.insert(classes, cls)
 	end
