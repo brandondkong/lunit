@@ -100,7 +100,7 @@ Or drop it into `package.json`:
 
 ## Contributing
 
-Issues and PRs welcome. See the [Contributing guide](https://github.brandondkong.com/lunit/contributing)
+Issues and PRs welcome. See the [Contributing guide](https://docs.kong.ly/lunit/contributing.html)
 for the local loop, repo layout, and conventions.
 
 ## License
