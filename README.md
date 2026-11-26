@@ -7,7 +7,7 @@ in milliseconds — same `*.test.ts` files, same output.
 [![npm version](https://img.shields.io/npm/v/@rbxts/lunit.svg)](https://www.npmjs.com/package/@rbxts/lunit)
 [![CI](https://github.com/brandon-kong/lunit/actions/workflows/test.yml/badge.svg)](https://github.com/brandon-kong/lunit/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Docs](https://img.shields.io/badge/docs-vitepress-brightgreen.svg)](https://github.brandondkong.com/lunit)
+[![Docs](https://img.shields.io/badge/docs-vitepress-brightgreen.svg)](https://docs.kong.ly/lunit/)
 
 ```ts
 import { Test, BeforeEach, Assert } from "@rbxts/lunit";
@@ -92,11 +92,11 @@ Or drop it into `package.json`:
 
 ## Documentation
 
-- [Getting Started](https://github.brandondkong.com/lunit/getting-started) — Roblox, Lune, and both.
-- [Decorators](https://github.brandondkong.com/lunit/guides/decorators) — every decorator, with class-level behavior spelled out.
-- [Writing tests](https://github.brandondkong.com/lunit/guides/writing-tests) — patterns past the basics.
-- [Running under Lune](https://github.brandondkong.com/lunit/guides/lune) — CI, runtime gating, troubleshooting.
-- [API reference](https://github.brandondkong.com/lunit/api-reference)
+- [Getting Started](https://docs.kong.ly/lunit/getting-started.html) — Roblox, Lune, and both.
+- [Decorators](https://docs.kong.ly/lunit/guides/decorators.html) — every decorator, with class-level behavior spelled out.
+- [Writing tests](https://docs.kong.ly/lunit/guides/writing-tests.html) — patterns past the basics.
+- [Running under Lune](https://docs.kong.ly/lunit/guides/lune.html) — CI, runtime gating, troubleshooting.
+- [API reference](https://docs.kong.ly/lunit/api-reference.html)
 
 ## Contributing
 
