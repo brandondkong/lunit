@@ -108,10 +108,15 @@ export class TestRunner {
 		const classesToRun = (focused.size() > 0 ? focused : this.testClasses).sort(
 			(a, b) => (a.getMetadata().order ?? DEFAULT_ORDER) < (b.getMetadata().order ?? DEFAULT_ORDER),
 		);
+		const isFiltered =
+			options.filter !== undefined || (options.tags?.size() ?? 0) > 0 || (options.excludeTags?.size() ?? 0) > 0;
 		for (const testClass of classesToRun) {
 			const classResults = await testClass.runTests(options);
+			// A filter can leave a class with no tests; keep it out of the report.
+			if (isFiltered && classResults.numTests === 0) continue;
 			this.addResults(results, classResults);
 			results.tests.set(testClass.getConstructor(), classResults);
+			if (options.bail && results.numTestsFailed > 0) break;
 		}
 		// REPORTER:onRunEnd
 		reporter.onRunEnd?.();
