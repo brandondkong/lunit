@@ -4,6 +4,25 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- **The Lune runner now works with game projects.** roblox-ts compiles game
+  projects to `require(...RuntimeLib)` and `game:GetService(...)` imports,
+  which failed with `attempt to index nil with 'GetService'`. The runner now
+  reads `default.project.json` (or `--project <file>`) and maps instance paths
+  to files through each `$path`.
+- **`lunit-root` default.** It was `out`, which does not contain Lunit in a
+  consumer project. It is now `node_modules/@rbxts/lunit/out`, or the `out`
+  folder next to the runner script.
+- Lune shim: add `TS.getModule` so packages can import other packages; load
+  `.lua` and `init.lua` files (older published packages); script stand-ins
+  support `Name`, `WaitForChild` and `FindFirstChild`.
+- Lune shim: modules are cached by file, so a module reached by two paths
+  (for example, Lunit through `rbxts_include` and through `lunit-root`) loads
+  once.
+
 ## [4.0.0] - 2026-04-27
 
 This is a major release. The signature change to `Assert.timeout` is the only
