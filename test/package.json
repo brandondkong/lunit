@@ -6,6 +6,7 @@
 	"scripts": {
 		"build": "rbxtsc",
 		"watch": "rbxtsc -w",
+		"test": "rbxtsc && lune run node_modules/@rbxts/lunit/scripts/lunit.luau out",
 		"format": "prettier --write .",
 		"format:check": "prettier .",
 		"lint": "eslint"

@@ -31,3 +31,6 @@ jobs:
             - uses: CompeyDev/setup-rokit@v0.1.2
 
             - run: lune run scripts/lunit.luau
+
+            # Game-type project (test/) built against the packed tarball.
+            - run: pnpm run test:game

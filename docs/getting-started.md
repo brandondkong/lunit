@@ -79,6 +79,10 @@ local watch loops.
 lune run node_modules/@rbxts/lunit/scripts/lunit.luau out/tests
 ```
 
+Run it from your project root. In a game project, the runner reads
+`default.project.json` to resolve `game:GetService(...)` imports; see
+[Game projects](/guides/lune#game-projects).
+
 Or wrap it in a `package.json` script:
 
 ```json
