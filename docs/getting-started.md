@@ -69,14 +69,13 @@ Press Play. Output lands in the Studio Output window:
 
 ## Run under Lune
 
-Lunit ships a standalone runner at `node_modules/@rbxts/lunit/scripts/lunit.luau`.
-It walks a directory recursively for `*.test.luau` / `*.spec.luau`, registers
-each as a test class, and exits non-zero on any failure — perfect for CI or
-local watch loops.
+Lunit ships a `lunit` command. It walks `out/` recursively for
+`*.test.luau` / `*.spec.luau`, registers each as a test class, and exits
+non-zero on any failure — perfect for CI or local watch loops.
 
 ```bash
-# After your TS build (rbxtsc or pnpm build), point it at the compiled tests
-lune run node_modules/@rbxts/lunit/scripts/lunit.luau out/tests
+# After your TS build (rbxtsc or pnpm build)
+npx lunit
 ```
 
 Run it from your project root. In a game project, the runner reads
@@ -88,7 +87,7 @@ Or wrap it in a `package.json` script:
 ```json
 {
 	"scripts": {
-		"test": "rbxtsc && lune run node_modules/@rbxts/lunit/scripts/lunit.luau out/tests"
+		"test": "rbxtsc && lunit"
 	}
 }
 ```

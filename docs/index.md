@@ -18,7 +18,7 @@ features:
     - title: Decorator-driven
       details: "@Test, @BeforeEach, @Each, @Retry, @Only, @Tag — declarative test definitions with no setup boilerplate."
     - title: Roblox + Lune
-      details: The same *.test.ts files run in Studio against a live DataModel and outside Roblox under Lune for CI. Gate runtime-specific cases with @Skip + Runtime.
+      details: The same *.test.ts files run in Studio against a live DataModel and outside Roblox under Lune for CI. Mark runtime-specific cases with @Tag("Roblox") or @Tag("Lune").
     - title: Batteries included
       details: Path-annotated deepEqual diffs, parameterized tests, retry/repeat for flake handling, custom reporters, tag filtering, focus mode.
 ---

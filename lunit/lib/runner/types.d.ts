@@ -6,7 +6,17 @@ export type TestClassInstance = object;
 export type TestClassConstructor = Constructor<TestClassInstance>;
 
 export type TestRunOptions = {
+	/** Run only tests that have at least one of these tags, on the test or on its class. */
 	tags?: string[];
+	/** Leave out tests that have any of these tags, on the test or on its class. */
+	excludeTags?: string[];
+	/**
+	 * Run only tests whose name contains this text. The name is `Class.method`;
+	 * display names set with `@DisplayName` match too. Case-sensitive.
+	 */
+	filter?: string;
+	/** Stop after the first failing test. Tests after it are not run or reported. */
+	bail?: boolean;
 	reporter?: Reporter;
 };
 

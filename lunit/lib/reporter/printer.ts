@@ -6,20 +6,21 @@ function getSymbol(passed: boolean, skipped?: boolean) {
 	return skipped ? "↓" : passed ? "✓" : "✗";
 }
 
-function formatTestResult(
-	{ passed, skipped, elapsedTimeMs, label, method: { options } }: TestCaseResult,
-	isLast: boolean = false,
-): StringBuilder {
+function getStatus({ passed, skipped, errorMessage }: TestCaseResult): string {
+	if (passed) return "PASSED";
+	if (!skipped) return "FAILED";
+	// The skip reason: the @Disabled / @Skip message, or the runtime-tag reason.
+	const reason = errorMessage ?? "";
+	return reason.size() > 0 ? `SKIPPED (${reason})` : "SKIPPED";
+}
+
+export function formatTestResult(result: TestCaseResult, isLast: boolean = false): StringBuilder {
 	const stringBuilder = new StringBuilder();
-
-	const failed = !(passed || skipped);
-
-	const isDisabled = options.disabled?.value || false;
-	const disabledMessage = options.disabled?.message ?? "";
+	const { passed, skipped, elapsedTimeMs, label } = result;
 
 	stringBuilder.append(" │");
 	stringBuilder.appendLine(
-		`\t${isLast ? "└" : "├"}── [${getSymbol(passed, skipped)}] ${label} (${math.round(elapsedTimeMs)}ms) ${passed ? "PASSED" : failed ? "FAILED" : isDisabled ? `SKIPPED${disabledMessage.size() > 0 ? ` (${disabledMessage})` : ""}` : ""}`,
+		`\t${isLast ? "└" : "├"}── [${getSymbol(passed, skipped)}] ${label} (${math.round(elapsedTimeMs)}ms) ${getStatus(result)}`,
 	);
 	return stringBuilder;
 }

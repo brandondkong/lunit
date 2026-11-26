@@ -1,50 +1,112 @@
 -- Standalone Lunit runner for Luau/Lune projects.
 -- Walks `tests-root` for *.test.luau files, registers each as a test class,
 -- and runs them through the compiled Lunit at `lunit-root`. Exits non-zero
--- if any test fails so it composes with CI.
---
--- Usage: lune run lunit.luau [tests-root] [lunit-root] [--project <file>] [--setup <file>]
---   tests-root  default: out/test
---   lunit-root  default: node_modules/@rbxts/lunit/out, else the `out` folder
---               next to this script
---   --project   Rojo project file used to resolve game:GetService(...) imports.
---               default: default.project.json
---   --setup     Luau file run before any test loads, for project-specific
---               stand-ins. default: lunit.setup.luau, when it exists
+-- if any test fails so it composes with CI. Run `lunit --help` for options.
 
 local fs = require("@lune/fs")
 local process = require("@lune/process")
+local stdio = require("@lune/stdio")
 
 local shim = require("./lune-shim")
 local reporter = require("./lune-reporter")
 
+local USAGE = [[
+Usage: lunit [tests-root] [lunit-root] [options]
+
+Arguments:
+  tests-root              Folder to search for *.test.luau / *.spec.luau files (default: out)
+  lunit-root              Compiled Lunit (default: node_modules/@rbxts/lunit/out)
+
+Options:
+  --filter <text>         Run only tests whose Class.method or display name contains <text>
+  --tag <tag>             Run only tests with this tag (repeat, or separate with commas)
+  --exclude-tag <tag>     Leave out tests with this tag (repeat, or separate with commas)
+  --bail                  Stop after the first failing test
+  --project <file>        Rojo project file (default: default.project.json)
+  --setup <file>          Setup file run before tests load (default: lunit.setup.luau, if present)
+  -h, --help              Show this help
+]]
+
+local function fail(message)
+	stdio.ewrite("lunit: " .. message .. "\n\n" .. USAGE)
+	process.exit(2)
+end
+
+local function splitTags(value, into)
+	for _, tag in string.split(value, ",") do
+		tag = string.match(tag, "^%s*(.-)%s*$")
+		if tag ~= "" then
+			table.insert(into, tag)
+		end
+	end
+end
+
 local positional = {}
-local setupFile = nil
+local runOptions = { reporter = reporter }
+local includeTags, excludeTags = {}, {}
+local projectFile, setupFile = nil, nil
+
+local VALUE_FLAGS = { ["--filter"] = true, ["--tag"] = true, ["--exclude-tag"] = true, ["--project"] = true, ["--setup"] = true }
+
 local i = 1
 while i <= #process.args do
 	local arg = process.args[i]
-	if arg == "--project" or arg == "--setup" then
-		local path = process.args[i + 1]
-		if path == nil then
-			error(arg .. " needs a file path")
+	-- Accept both `--flag value` and `--flag=value`.
+	local flag, inline = string.match(arg, "^(%-%-[%w-]+)=(.*)$")
+	flag = flag or arg
+	if flag == "-h" or flag == "--help" then
+		print(USAGE)
+		process.exit(0)
+	elseif flag == "--bail" then
+		runOptions.bail = true
+		i += 1
+	elseif VALUE_FLAGS[flag] then
+		local value = inline
+		if value == nil then
+			value = process.args[i + 1]
+			i += 1
 		end
-		if arg == "--setup" then
-			setupFile = path
-		elseif not shim.loadProject(path) then
-			error("project file not found: " .. path)
+		if value == nil or value == "" then
+			fail(flag .. " needs a value")
 		end
-		i += 2
+		if flag == "--filter" then
+			runOptions.filter = value
+		elseif flag == "--tag" then
+			splitTags(value, includeTags)
+		elseif flag == "--exclude-tag" then
+			splitTags(value, excludeTags)
+		elseif flag == "--project" then
+			projectFile = value
+		else
+			setupFile = value
+		end
+		i += 1
+	elseif string.sub(arg, 1, 1) == "-" then
+		fail("unknown option " .. arg)
 	else
 		table.insert(positional, arg)
 		i += 1
 	end
 end
 
+if #includeTags > 0 then
+	runOptions.tags = includeTags
+end
+if #excludeTags > 0 then
+	runOptions.excludeTags = excludeTags
+end
+
+if projectFile ~= nil and not shim.loadProject(projectFile) then
+	fail("project file not found: " .. projectFile)
+end
 shim.useDefaultProject()
 if setupFile == nil and fs.isFile("lunit.setup.luau") then
 	setupFile = "lunit.setup.luau"
 end
 if setupFile ~= nil then
+	if not fs.isFile(setupFile) then
+		fail("setup file not found: " .. setupFile)
+	end
 	shim.runSetup(setupFile)
 end
 
@@ -72,7 +134,7 @@ local function defaultLunitRoot()
 	return packageOut()
 end
 
-local testsRoot = positional[1] or "out/test"
+local testsRoot = positional[1] or "out"
 local lunitRoot = positional[2] or defaultLunitRoot()
 
 local function isTestFile(name)
@@ -109,5 +171,5 @@ if #classes == 0 then
 	process.exit(1)
 end
 
-local result = lunit.TestRunner:fromClasses(classes):run({ reporter = reporter }):expect()
+local result = lunit.TestRunner:fromClasses(classes):run(runOptions):expect()
 process.exit(if result.numTestsFailed > 0 then 1 else 0)

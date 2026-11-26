@@ -1,4 +1,4 @@
-import { Assert, Runtime, Test } from "@rbxts/lunit";
+import { Assert, Runtime, Tag, Test } from "@rbxts/lunit";
 
 // Under Lune, `game` is a real Lune DataModel and datatypes come from
 // @lune/roblox. These tests check that the stand-ins match Roblox.
@@ -71,6 +71,14 @@ class LuneEngine {
 		const folder = game.GetService("Workspace").FindFirstChild("FromSetup");
 		Assert.notEqual(folder, undefined);
 		Assert.equal(folder?.GetAttribute("count"), 1);
+	}
+
+	// Runtime tag: skipped under Lune (reported as "Roblox only"), so the
+	// error below never runs here.
+	@Tag("Roblox")
+	@Test
+	public robloxOnlyTestIsSkipped() {
+		error("a Roblox-only test ran under Lune");
 	}
 }
 

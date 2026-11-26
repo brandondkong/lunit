@@ -2,6 +2,7 @@ import { getValuesFromMap, sharesOneElement } from "../../utils/array";
 import { getClassMetadata, getLifecycleMethods, hasMetadata } from "../metadata/utils";
 import { DEFAULT_ORDER } from "../shared/constants";
 import { Lifecycle, MetadataKey } from "../shared/enums";
+import { Runtime } from "../runtime";
 import { BaseMetadata, Method } from "../shared/types";
 import {
 	TestCaseResult,
@@ -18,6 +19,27 @@ export function resolveTestLabel(method: Method, caseArgs?: ReadonlyArray<unknow
 	const parts: string[] = [];
 	for (const arg of caseArgs) parts.push(tostring(arg));
 	return `${baseName} (${parts.join(", ")})`;
+}
+
+/**
+ * Runtime tags: a test tagged `"Lune"` runs only under Lune, and a test tagged
+ * `"Roblox"` (or `"Studio"`) runs only under Roblox. Returns the skip reason
+ * when the current runtime is not one of the tagged runtimes.
+ */
+export function getRuntimeSkipReason(tags: ReadonlyArray<string>): string | undefined {
+	let lune = false;
+	let roblox = false;
+	for (const tag of tags) {
+		if (tag === "Lune") lune = true;
+		else if (tag === "Roblox" || tag === "Studio") roblox = true;
+	}
+	if (!lune && !roblox) return undefined;
+	if (Runtime.isLune()) return lune ? undefined : "Roblox only";
+	return roblox ? undefined : "Lune only";
+}
+
+function isFailure(result: TestCaseResult): boolean {
+	return !result.passed && !result.skipped;
 }
 
 export class TestClassRunner {
@@ -38,7 +60,7 @@ export class TestClassRunner {
 	}
 
 	public async runTests(options: TestRunOptions): Promise<TestClassRunResult> {
-		const testList = this.getTestsFromTestClass(options.tags ?? []);
+		const testList = this.getTestsFromTestClass(options);
 
 		const results: TestClassRunResult = {
 			elapsedTimeMs: 0,
@@ -49,9 +71,12 @@ export class TestClassRunner {
 			tests: [],
 		};
 
-		// Class-level @Disabled / @Skip — surface every test as skipped without
-		// running lifecycle hooks. Honors the optional message on the class.
-		if (this.metadata.disabled?.value) {
+		// Class-level @Disabled / @Skip, or a class runtime tag for the other
+		// runtime — surface every test as skipped without running lifecycle
+		// hooks. Honors the optional message on the class.
+		const classRuntimeSkip = getRuntimeSkipReason(this.metadata.tags ?? []);
+		if (this.metadata.disabled?.value || classRuntimeSkip !== undefined) {
+			const message = this.metadata.disabled?.value ? this.metadata.disabled.message : classRuntimeSkip;
 			for (const test of testList) {
 				const cases = test.options.cases;
 				const count = cases !== undefined && cases.size() > 0 ? cases.size() : 1;
@@ -64,7 +89,7 @@ export class TestClassRunner {
 						passed: false,
 						skipped: true,
 						elapsedTimeMs: 0,
-						errorMessage: this.metadata.disabled.message,
+						errorMessage: message,
 						caseIndex: idx,
 						caseArgs: args,
 					});
@@ -93,7 +118,9 @@ export class TestClassRunner {
 				else if (result.skipped) results.numTestsSkipped++;
 				else results.numTestsFailed++;
 				results.tests.push(result);
+				if (options.bail && isFailure(result)) break;
 			}
+			if (options.bail && results.numTestsFailed > 0) break;
 		}
 
 		// LIFECYCLE:afterAll
@@ -118,21 +145,28 @@ export class TestClassRunner {
 		});
 	}
 
-	private getTestsFromTestClass(tags: string[]): ReadonlyArray<Method> {
+	private getTestsFromTestClass(options: TestRunOptions): ReadonlyArray<Method> {
 		if (hasMetadata(this.testClassConstructor, MetadataKey.Method) === false) return [];
 		const methods = (this.testClassConstructor as unknown as TestClass)[MetadataKey.Method];
+		const tags = options.tags ?? [];
+		const excludeTags = options.excludeTags ?? [];
+		const classTags = this.metadata?.tags ?? [];
 
 		const filtered = getValuesFromMap(methods)
 			.filter((val) => val.options.isTest)
 			.filter((val) => {
 				if (tags.size() > 0) {
 					const methodTags = val.options.tags ?? [];
-					const classTags = this.metadata?.tags ?? [];
-
 					return sharesOneElement(tags, classTags) || sharesOneElement(tags, methodTags);
 				}
 				return true;
-			});
+			})
+			.filter((val) => {
+				if (excludeTags.size() === 0) return true;
+				const methodTags = val.options.tags ?? [];
+				return !sharesOneElement(excludeTags, classTags) && !sharesOneElement(excludeTags, methodTags);
+			})
+			.filter((val) => options.filter === undefined || this.matchesFilter(val, options.filter));
 
 		const focused = filtered.filter((val) => val.options.only);
 		const candidates = focused.size() > 0 ? focused : filtered;
@@ -140,15 +174,24 @@ export class TestClassRunner {
 		return candidates.sort((a, b) => (a.options.order ?? DEFAULT_ORDER) < (b.options.order ?? DEFAULT_ORDER));
 	}
 
+	private matchesFilter(method: Method, filter: string): boolean {
+		const className = tostring(this.testClassConstructor);
+		const names = [`${className}.${method.name}`, `${this.getClassDisplayName()}.${method.name}`];
+		if (method.options.displayName !== undefined) names.push(method.options.displayName);
+		return names.some((name) => name.find(filter, 1, true)[0] !== undefined);
+	}
+
 	private createFinalTestCaseResult(result: TestCaseResult): TestCaseResult {
 		const isNegated = result.method.options.negated;
 
-		result.passed = isNegated && !result.skipped ? !result.passed : result.passed;
-		result.errorMessage = isNegated
-			? !(result.passed || result.skipped)
-				? ""
-				: "Test was marked as a negative test and unexpectedly did not error"
-			: result.errorMessage;
+		// A skipped test keeps its skip reason, negated or not.
+		if (!isNegated || result.skipped) return result;
+
+		// Negated: throwing is a pass; not throwing is a failure.
+		result.passed = !result.passed;
+		result.errorMessage = result.passed
+			? undefined
+			: "Test was marked as a negative test and unexpectedly did not error";
 
 		return result;
 	}
@@ -198,6 +241,11 @@ export class TestClassRunner {
 		caseArgs?: ReadonlyArray<unknown>,
 		caseIndex?: number,
 	): Promise<TestCaseResult> {
+		// A test for the other runtime is skipped without its lifecycle hooks,
+		// which may call APIs that do not exist here.
+		const runtimeSkip = getRuntimeSkipReason(method.options.tags ?? []);
+		if (runtimeSkip !== undefined) return this.runTestMethod(method, options, caseArgs, caseIndex, runtimeSkip);
+
 		// LIFECYCLE:beforeEach
 		await this.runLifecycleMethod(Lifecycle.RunBeforeEachTest);
 		const result = await this.runTestMethod(method, options, caseArgs, caseIndex);
@@ -211,6 +259,7 @@ export class TestClassRunner {
 		options: TestRunOptions,
 		caseArgs?: ReadonlyArray<unknown>,
 		caseIndex?: number,
+		skipReason?: string,
 	): Promise<TestCaseResult> {
 		const callback = (this.testClassConstructor as unknown as TestClass)[method.name] as
 			| ((instance: TestClassInstance, ...args: unknown[]) => unknown)
@@ -231,7 +280,10 @@ export class TestClassRunner {
 		options.reporter?.onTestStart?.(label);
 		const start = os.clock();
 		try {
-			if (method.options.disabled?.value) {
+			if (skipReason !== undefined) {
+				result.skipped = true;
+				result.errorMessage = skipReason;
+			} else if (method.options.disabled?.value) {
 				result.skipped = true;
 				result.errorMessage = method.options.disabled.message;
 			} else {
