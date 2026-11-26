@@ -17,7 +17,7 @@ class GameProjectImports {
 	}
 
 	@Test
-	public fakeGameIsNotAnInstance() {
+	public runtimeReportsLune() {
 		Assert.true(Runtime.isLune());
 	}
 }
