@@ -1,5 +1,6 @@
 import Assert from "../lib/assert";
-import { BeforeAll, BeforeEach, DisplayName, Tag, Test } from "../lib/decorator";
+import { BeforeAll, BeforeEach, Disabled, DisplayName, Negated, Tag, Test } from "../lib/decorator";
+import { formatTestResult } from "../lib/reporter/printer";
 import { Runtime } from "../lib/runtime";
 import { TestRunner } from "../lib/runner/runner";
 
@@ -284,6 +285,46 @@ class TestRunnerApi {
 		const result = await TestRunner.fromClasses([OtherRuntime]).run({ reporter: silentReporter });
 		Assert.equal(result.numTestsSkipped, 1);
 		Assert.false(beforeAllRan);
+	}
+
+	@Test
+	public async negatedTestMessages() {
+		class Subject {
+			@Negated
+			@Test
+			public throws() {
+				error("expected");
+			}
+
+			@Negated
+			@Test
+			public doesNotThrow() {}
+		}
+
+		const result = await TestRunner.fromClasses([Subject]).run({ reporter: silentReporter });
+		const tests = result.tests.get(Subject)!.tests;
+		const throws = tests.find((t) => t.method.name === "throws")!;
+		const doesNotThrow = tests.find((t) => t.method.name === "doesNotThrow")!;
+		Assert.true(throws.passed);
+		Assert.undefined(throws.errorMessage);
+		Assert.false(doesNotThrow.passed);
+		Assert.equal(doesNotThrow.errorMessage, "Test was marked as a negative test and unexpectedly did not error");
+	}
+
+	@Test
+	public async reportShowsSkipReasonFromResult() {
+		@Disabled("class is off")
+		class DisabledClass {
+			@Negated
+			@Test
+			public a() {}
+		}
+
+		const result = await TestRunner.fromClasses([DisabledClass]).run({ reporter: silentReporter });
+		const test = result.tests.get(DisabledClass)!.tests[0];
+		Assert.equal(test.errorMessage, "class is off");
+		const line = formatTestResult(test).toString();
+		Assert.notUndefined(line.find("SKIPPED (class is off)", 1, true)[0]);
 	}
 }
 

@@ -184,12 +184,14 @@ export class TestClassRunner {
 	private createFinalTestCaseResult(result: TestCaseResult): TestCaseResult {
 		const isNegated = result.method.options.negated;
 
-		result.passed = isNegated && !result.skipped ? !result.passed : result.passed;
-		result.errorMessage = isNegated
-			? !(result.passed || result.skipped)
-				? ""
-				: "Test was marked as a negative test and unexpectedly did not error"
-			: result.errorMessage;
+		// A skipped test keeps its skip reason, negated or not.
+		if (!isNegated || result.skipped) return result;
+
+		// Negated: throwing is a pass; not throwing is a failure.
+		result.passed = !result.passed;
+		result.errorMessage = result.passed
+			? undefined
+			: "Test was marked as a negative test and unexpectedly did not error";
 
 		return result;
 	}
