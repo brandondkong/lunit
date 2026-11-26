@@ -15,10 +15,10 @@ test suite also run in CI in milliseconds.
 - **CI.** GitHub Actions can run the suite directly; no headless Roblox.
 - **Hermetic.** No DataModel state to clean up between runs.
 
-The catch: Lune has no DataModel. Imports through `game:GetService(...)` work
-(see [Game projects](#game-projects)), but real engine behavior (services such
-as `RunService`, `Instance` types, `task.wait` semantics that differ from
-Lune's) does not. Use `@Skip` + `Runtime.isRoblox()` to gate those tests.
+The catch: Lune is not the Roblox engine. `game`, services, instances and
+datatypes exist (see [Roblox APIs under Lune](#roblox-apis-under-lune)), but
+engine behavior (physics, replication, players, DataStores, `task.wait`
+timing) does not. Use `@Skip` + `Runtime.isRoblox()` to gate those tests.
 
 ## Install Lune
 
@@ -49,6 +49,16 @@ All arguments are optional:
 
 You only need `lunit-root` if you've vendored Lunit somewhere else.
 
+The runner exits non-zero on any failure, so it composes with CI:
+
+```yaml
+# .github/workflows/test.yml
+- run: pnpm install --frozen-lockfile
+- run: pnpm run build
+- uses: CompeyDev/setup-rokit@v0.1.2
+- run: lune run node_modules/@rbxts/lunit/scripts/lunit.luau out/tests
+```
+
 ## Game projects
 
 In a `"game"` project, roblox-ts compiles imports to instance paths, not
@@ -59,10 +69,10 @@ local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_incl
 local _lunit = TS.import(script, game:GetService("ReplicatedStorage"), "rbxts_include", "node_modules", "@rbxts", "lunit", "out")
 ```
 
-The runner reads your Rojo project file and uses each `$path` to map these
-instance paths back to files. For example, `ReplicatedStorage.TS` maps to
-`out/shared` and `ReplicatedStorage.rbxts_include.node_modules.@rbxts` maps to
-`node_modules/@rbxts`. Run the runner from your project root, where
+The runner reads your Rojo project file and builds the same tree in a Lune
+DataModel: a `Folder` for each directory and a `ModuleScript` for each Lua
+file, as Rojo does. For example, `ReplicatedStorage.TS` holds the modules in
+`out/shared`. Run the runner from your project root, where
 `default.project.json` is. If your project file has a different name, pass
 `--project`:
 
@@ -70,22 +80,69 @@ instance paths back to files. For example, `ReplicatedStorage.TS` maps to
 lune run node_modules/@rbxts/lunit/scripts/lunit.luau out --project dev.project.json
 ```
 
-Under Lune, `game` is a stand-in that only resolves paths. `game:GetService`,
-`WaitForChild`, `FindFirstChild`, `Parent` and `Name` work for module lookups.
-Service methods (for example `RunService:IsStudio()`) do not exist. Gate tests
-that need them with `Runtime.isRoblox()`. `typeof(game)` is `"table"`, so
-`Runtime.isLune()` stays `true`.
-
 Package projects (`_G[script]` output) need no project file.
 
-The runner exits non-zero on any failure, so it composes with CI:
+## Roblox APIs under Lune
 
-```yaml
-# .github/workflows/test.yml
-- run: pnpm install --frozen-lockfile
-- run: pnpm run build
-- uses: CompeyDev/setup-rokit@v0.1.2
-- run: lune run node_modules/@rbxts/lunit/scripts/lunit.luau out/tests
+`game` is a real Lune `DataModel`, and `script`
+is a real `ModuleScript`. `IsA`, `typeIs`, `Parent`, `FindFirstChild`,
+attributes and tags work as in Roblox.
+
+- **Datatypes.** Every datatype that `@lune/roblox` exports is a global:
+  `Vector3`, `CFrame`, `Color3`, `UDim2`, `Enum`, `Instance` and more.
+- **Services.** `game:GetService(name)` works for every service in Roblox's
+  API. Lune ships Roblox's reflection database, so new services and datatypes
+  arrive when you update Lune. Lunit keeps no list of its own.
+- **Engine methods.** Lune implements the general `Instance` API, not engine
+  behavior. A missing method fails with a clear error, for example
+  `GetPlayers is not a valid member of Players`.
+
+Lunit adds a method only when it has exactly one correct answer in a headless
+run:
+
+| Method                                                                                 | Under Lune                                                   |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `Instance:WaitForChild`                                                                | Returns the child. Returns `nil` with a timeout; else fails. |
+| `RunService:IsStudio` / `IsClient` / `IsServer` / `IsRunning` / `IsRunMode` / `IsEdit` | `false`                                                      |
+| `HttpService:JSONEncode` / `JSONDecode`                                                | Real JSON, through `@lune/serde`                             |
+| `HttpService:GenerateGUID`                                                             | A random version 4 GUID                                      |
+
+`WaitForChild` cannot wait under Lune: nothing else adds children while a
+module loads. It fails at once instead of hanging.
+
+Methods with no single correct answer (DataStores, HTTP requests, players)
+stay missing on purpose: a guessed value can make a wrong test pass. Fake them
+for your own game in a setup file, or gate the test with `Runtime.isRoblox()`.
+
+`typeof(game)` is `"Instance"` under Lune too. `Runtime.isLune()` still
+returns `true`, because the runner sets `_G.__LUNIT_LUNE`.
+
+## Setup file
+
+A setup file runs before any test module loads. Use it for stand-ins that only
+make sense in your game: instances your modules expect at load time, or engine
+methods with a value that suits your tests.
+
+The runner uses `lunit.setup.luau` in the folder you run from, if it exists.
+Pass `--setup <file>` to use another file. It is a normal Lune module, so
+`require("@lune/roblox")` and relative requires work. If it returns a
+function, the runner calls it with `{ game = game }`:
+
+```lua
+-- lunit.setup.luau
+local roblox = require("@lune/roblox")
+
+-- Fake an engine method for every Players instance.
+roblox.implementMethod("Players", "GetPlayers", function()
+	return {}
+end)
+
+return function(ctx)
+	-- A folder that a module waits for at load time.
+	local plots = roblox.Instance.new("Folder")
+	plots.Name = "Plots"
+	plots.Parent = ctx.game:GetService("Workspace")
+end
 ```
 
 ## Wrap it in `npm test`
@@ -109,7 +166,7 @@ Lunit's npm package bundles four Lune-side helpers under
 | File                 | Role                                                                       |
 | -------------------- | -------------------------------------------------------------------------- |
 | `lunit.luau`         | Entry point — auto-discovery + runner                                      |
-| `lune-shim.luau`     | Synthesizes the roblox-ts runtime (`_G[script]`, RuntimeLib, `TS.import`)  |
+| `lune-shim.luau`     | Builds the DataModel and the roblox-ts runtime (`_G[script]`, RuntimeLib)  |
 | `promise.luau`       | Minimal Promise covering only what the framework needs (~115 lines)        |
 | `lune-reporter.luau` | ANSI-colored output for `PASSED` / `FAILED` / `SKIPPED` and status symbols |
 
@@ -150,13 +207,17 @@ let detection silently break.
 **`module not found: out/tests`** — your TS hasn't been built yet, or your
 output dir is somewhere other than `out/`. Run `rbxtsc` first.
 
-**`module not found: @game/... (no Rojo project file loaded ...)`** — a game
-project's import could not be mapped to a file. Run from the folder that holds
-`default.project.json`, or pass `--project <file>`.
+**`Infinite yield: ReplicatedStorage.rbxts_include does not exist ... (no Rojo
+project file loaded ...)`** — a game project's import could not be found. Run
+from the folder that holds `default.project.json`, or pass `--project <file>`.
 
-**`module not found: @game/... (no $path in ... covers this instance)`** — the
-instance path is not in your Rojo tree. Check the `$path` entries in your
-project file.
+**`module not found: ReplicatedStorage.TS.x`** — the instance is not in your
+Rojo tree. Check the `$path` entries in your project file, and check that the
+file was compiled.
+
+**`X is not a valid member of Y`** — a module calls an engine method that Lune
+does not have. Fake it in a [setup file](#setup-file), or gate the test with
+`@Skip(!Runtime.isRoblox(), ...)`.
 
 **`attempt to index nil with 'X'` from a test** — usually a Roblox API leaking
 into a test that runs under Lune. Wrap with `@Skip(!Runtime.isRoblox(), ...)`.

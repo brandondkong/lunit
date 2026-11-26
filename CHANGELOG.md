@@ -4,6 +4,27 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [4.1.0] - 2026-11-26
+
+### Added
+
+- **Roblox APIs under Lune.** `game` is now a real Lune DataModel built from
+  your Rojo project file, and `script` is a real `ModuleScript`. Every
+  datatype that `@lune/roblox` exports (`Vector3`, `CFrame`, `Enum`,
+  `Instance`, ...) is a global, and `game:GetService` works for every
+  service. New services and datatypes come with Lune updates.
+- **Engine stand-ins** for methods with one correct headless answer:
+  `WaitForChild` (fails at once instead of hanging), `RunService:Is*`
+  (`false`), `HttpService:JSONEncode` / `JSONDecode` / `GenerateGUID`.
+- **Setup file.** `lunit.setup.luau` (or `--setup <file>`) runs before any
+  test loads, for project-specific stand-ins.
+- Lune shim: `TS.generator`, so generator functions work.
+
+### Changed
+
+- `Runtime.isRoblox()` also checks `_G.__LUNIT_LUNE`, which the Lune runner
+  sets, because `typeof(game)` is now `"Instance"` under Lune too.
+
 ## [4.0.3] - 2026-11-26
 
 ### Fixed
