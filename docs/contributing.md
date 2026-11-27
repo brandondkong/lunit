@@ -40,11 +40,15 @@ The framework dogfoods itself. The full suite runs under Lune in
 milliseconds:
 
 ```bash
-pnpm test           # rbxtsc + lune run scripts/lunit.luau
+pnpm test                    # rbxtsc + lune run scripts/lunit.luau
+pnpm run test:coverage       # the same suite with coverage; writes coverage/lcov.info
+pnpm run test:game           # the game-project fixture in test/, against the packed tarball
+pnpm run test:game:coverage  # the fixture's coverage build, checked against its markers
 ```
 
-That's the same command CI runs on every push. If it passes locally, it
-passes in CI.
+CI runs all four on every push, and shows Lunit's coverage in the job
+summary. A coverage build replaces `out/`; the next `pnpm run build` puts the
+normal build back.
 
 ### Lint and format
 
