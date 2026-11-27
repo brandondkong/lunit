@@ -37,6 +37,7 @@
 	"files": [
 		"out",
 		"scripts",
+		"transformer",
 		"!out/test",
 		"!scripts/run-tests.server.luau",
 		"!**/*.tsbuildinfo"
