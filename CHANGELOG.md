@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Coverage.** A roblox-ts transformer, `@rbxts/lunit/transformer`, counts
+  which TypeScript lines run. Turn it on in a separate
+  `tsconfig.coverage.json`. Under Lune, `lunit --coverage` prints a summary
+  and writes `coverage/lcov.info`. In Roblox, `run({ coverage: true })`
+  prints the summary. The `Coverage` export reads the data, and
+  `TestRunResult.coverage` holds it.
+
 ## [4.2.0] - 2026-11-27
 
 ### Added
