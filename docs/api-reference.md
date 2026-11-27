@@ -77,6 +77,7 @@ await new TestRunner([root]).run({
 | `excludeTags` | `string[]` | Leave out tests whose tag (or class tag) overlaps these.                             |
 | `filter`      | `string`   | Run only tests whose `Class.method` or display name contains this text (plain text). |
 | `bail`        | `boolean`  | Stop after the first failing test. Later tests are not run or reported.              |
+| `coverage`    | `boolean`  | After the report, print line coverage. See [Coverage](/guides/coverage).             |
 | `reporter`    | `Reporter` | Override per-test and per-run callbacks. See [Reporter](#reporter).                  |
 
 With `tags`, `excludeTags` or `filter` set, classes left with no tests are not
@@ -84,15 +85,16 @@ in `TestRunResult.tests`.
 
 `TestRunResult`:
 
-| Field             | Type                                            | Notes                                              |
-| ----------------- | ----------------------------------------------- | -------------------------------------------------- |
-| `numTests`        | `number`                                        | Total invocations (parameterized rows count).      |
-| `numTestsPassed`  | `number`                                        |                                                    |
-| `numTestsFailed`  | `number`                                        |                                                    |
-| `numTestsSkipped` | `number`                                        |                                                    |
-| `elapsedTimeMs`   | `number`                                        | Sum across all tests.                              |
-| `tags`            | `string[] \| undefined`                         | Echoes the `tags` filter, if any.                  |
-| `tests`           | `Map<TestClassConstructor, TestClassRunResult>` | Per-class breakdown. Key is the class constructor. |
+| Field             | Type                                            | Notes                                               |
+| ----------------- | ----------------------------------------------- | --------------------------------------------------- |
+| `numTests`        | `number`                                        | Total invocations (parameterized rows count).       |
+| `numTestsPassed`  | `number`                                        |                                                     |
+| `numTestsFailed`  | `number`                                        |                                                     |
+| `numTestsSkipped` | `number`                                        |                                                     |
+| `elapsedTimeMs`   | `number`                                        | Sum across all tests.                               |
+| `tags`            | `string[] \| undefined`                         | Echoes the `tags` filter, if any.                   |
+| `tests`           | `Map<TestClassConstructor, TestClassRunResult>` | Per-class breakdown. Key is the class constructor.  |
+| `coverage`        | `CoverageReport \| undefined`                   | Set with `coverage: true`, if coverage data exists. |
 
 `TestClassRunResult` is the same shape minus `tags` and `tests`, plus a
 `tests: TestCaseResult[]` field.
@@ -215,6 +217,30 @@ Runtime.isLune(); // true under Lune
 
 Detection is by global `game`: present-as-`Instance` ⇒ Roblox; otherwise
 treated as non-Roblox.
+
+## `Coverage`
+
+Reads the line counts that the coverage transformer records. See
+[Coverage](/guides/coverage) for the setup.
+
+```ts
+import { Coverage } from "@rbxts/lunit";
+
+const report = Coverage.collect(); // undefined without a coverage build
+if (report) print(Coverage.formatSummary(report));
+```
+
+| Function                         | Returns                       | Notes                                                        |
+| -------------------------------- | ----------------------------- | ------------------------------------------------------------ |
+| `Coverage.collect()`             | `CoverageReport \| undefined` | The counts so far. `undefined` if no module is instrumented. |
+| `Coverage.formatSummary(report)` | `string`                      | One row per file, with missed lines, and a total.            |
+| `Coverage.toLcov(report)`        | `string`                      | The report in lcov format.                                   |
+| `Coverage.reset()`               | `void`                        | Sets every count back to zero.                               |
+
+`CoverageReport` has `files: FileCoverage[]` (sorted by path), `linesHit` and
+`linesFound`. `FileCoverage` has `file` (the TypeScript path, relative to the
+project), `lines: Map<number, number>` (the count for each line that starts a
+statement), `linesHit` and `linesFound`.
 
 ## Reporter
 

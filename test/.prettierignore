@@ -1,0 +1,2 @@
+# Coverage markers must stay at the end of the statement line.
+src/shared/coverage/shop.ts

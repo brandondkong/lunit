@@ -8,3 +8,5 @@
 
 # Sandbox installs a fresh @rbxts/lunit tarball each run; lockfile would just rot.
 package-lock.json
+
+/coverage/

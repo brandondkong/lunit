@@ -4,6 +4,7 @@ import { TestClassConstructor, TestRunOptions, Constructor, TestRunResult, BaseT
 import { getTestSummary } from "../reporter/printer";
 import { TestClassRunner } from "./class";
 import { DEFAULT_ORDER } from "../shared/constants";
+import { Coverage, NO_COVERAGE_MESSAGE } from "../coverage";
 
 const DEFAULT_GLOB_PATTERNS: ReadonlyArray<string> = [".+%.test$", ".+%.spec$"];
 
@@ -120,9 +121,12 @@ export class TestRunner {
 		}
 		// REPORTER:onRunEnd
 		reporter.onRunEnd?.();
-		const report = getReport(results);
-		if (reporter.output !== undefined) reporter.output(report);
-		else print(report);
+		const output = (text: string) => (reporter.output !== undefined ? reporter.output(text) : print(text));
+		output(getReport(results));
+		if (options.coverage) {
+			results.coverage = Coverage.collect();
+			output(results.coverage !== undefined ? Coverage.formatSummary(results.coverage) : NO_COVERAGE_MESSAGE);
+		}
 		return results;
 	}
 

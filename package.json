@@ -1,6 +1,6 @@
 {
 	"name": "@rbxts/lunit",
-	"version": "4.2.0",
+	"version": "4.3.0",
 	"main": "out/init.lua",
 	"bin": {
 		"lunit": "scripts/cli.js"
@@ -16,6 +16,7 @@
 		"format": "prettier --write .",
 		"install-test": "pnpm run build && pnpm pack --out test/rbxts-lunit.tgz && cd test && pnpm install --frozen-lockfile && rm -rf node_modules/@rbxts/lunit && mkdir -p node_modules/@rbxts/lunit && tar -xzf rbxts-lunit.tgz -C node_modules/@rbxts/lunit --strip-components=1 && mkdir -p node_modules/.bin && ln -sf ../@rbxts/lunit/scripts/cli.js node_modules/.bin/lunit && chmod +x node_modules/@rbxts/lunit/scripts/cli.js",
 		"test:game": "pnpm run install-test && cd test && pnpm run test",
+		"test:coverage": "pnpm run install-test && cd test && pnpm run test:coverage",
 		"docs:dev": "vitepress dev ./docs",
 		"docs:build": "vitepress build ./docs",
 		"docs:preview": "vitepress preview ./docs"
@@ -37,6 +38,7 @@
 	"files": [
 		"out",
 		"scripts",
+		"transformer",
 		"!out/test",
 		"!scripts/run-tests.server.luau",
 		"!**/*.tsbuildinfo"

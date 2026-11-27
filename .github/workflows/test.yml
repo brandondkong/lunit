@@ -34,3 +34,6 @@ jobs:
 
             # Game-type project (test/) built against the packed tarball.
             - run: pnpm run test:game
+
+            # Coverage build of the same project, checked against markers in the source.
+            - run: pnpm run test:coverage

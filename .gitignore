@@ -9,3 +9,4 @@
 # Docs
 docs/.vitepress/cache/*
 docs/.vitepress/dist
+/coverage/
