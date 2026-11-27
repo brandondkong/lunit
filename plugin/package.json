@@ -1,0 +1,21 @@
+{
+	"name": "lunit-studio-plugin",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Roblox Studio plugin that finds, runs and reports Lunit tests.",
+	"packageManager": "pnpm@10.33.0",
+	"scripts": {
+		"build": "rbxtsc -p tsconfig.plugin.json",
+		"watch": "rbxtsc -p tsconfig.plugin.json -w",
+		"test": "rbxtsc --rojo test.project.json && lune run ../scripts/lunit.luau out --project test.project.json",
+		"build:plugin": "rbxtsc -p tsconfig.plugin.json && rojo build -o Lunit.rbxm",
+		"install:plugin": "rbxtsc -p tsconfig.plugin.json && node install-plugin.js"
+	},
+	"devDependencies": {
+		"@rbxts/compiler-types": "^3.0.0-types.0",
+		"@rbxts/lunit": "^4.3.0",
+		"@rbxts/types": "^1.0.916",
+		"roblox-ts": "^3.0.0",
+		"typescript": "^5.8.2"
+	}
+}
