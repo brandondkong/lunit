@@ -5,6 +5,10 @@ import { ModuleLoader } from "./loader";
 
 const ChangeHistoryService = game.GetService("ChangeHistoryService");
 
+interface RuntimeLib {
+	import: (this: void, context: Instance, module: Instance) => unknown;
+}
+
 export interface RunSummary {
 	passed: number;
 	failed: number;
@@ -61,12 +65,23 @@ export class Session {
 				0,
 			);
 		}
+		// roblox-ts runtimes register modules at _G[module] and refuse a module
+		// another runtime registered. Each load makes a fresh runtime, so drop
+		// what earlier loads registered for the place's modules. Modules of
+		// other plugins are not in the place and stay.
+		for (const [key] of pairs(_G as unknown as Map<unknown, unknown>)) {
+			if (typeIs(key, "Instance") && key.IsDescendantOf(game)) rawset(_G, key, undefined);
+		}
+
 		const loader = new ModuleLoader();
-		// Lunit is a roblox-ts package: it reads its runtime from _G[script], which
-		// TS.import sets before requiring a package. Do the same here.
+		// Lunit is a package, so import it through the project's runtime, as the
+		// tests do. The runtime script itself is the importing context.
 		const runtime = findRuntimeLib(lunitModule);
-		if (runtime !== undefined) rawset(_G, lunitModule, loader.require(runtime));
-		const lunit = loader.require(lunitModule) as LunitModule;
+		const lunit = (
+			runtime !== undefined
+				? (loader.require(runtime) as RuntimeLib).import(runtime, lunitModule)
+				: loader.require(lunitModule)
+		) as LunitModule;
 
 		const failures: LoadFailure[] = [];
 		const moduleOf = new Map<unknown, ModuleScript>();
