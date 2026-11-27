@@ -22,6 +22,8 @@ Options:
   --tag <tag>             Run only tests with this tag (repeat, or separate with commas)
   --exclude-tag <tag>     Leave out tests with this tag (repeat, or separate with commas)
   --bail                  Stop after the first failing test
+  --coverage              Print line coverage and write coverage/lcov.info (needs a build
+                          made with @rbxts/lunit/transformer)
   --project <file>        Rojo project file (default: default.project.json)
   --setup <file>          Setup file run before tests load (default: lunit.setup.luau, if present)
   -h, --help              Show this help
@@ -59,6 +61,9 @@ while i <= #process.args do
 		process.exit(0)
 	elseif flag == "--bail" then
 		runOptions.bail = true
+		i += 1
+	elseif flag == "--coverage" then
+		runOptions.coverage = true
 		i += 1
 	elseif VALUE_FLAGS[flag] then
 		local value = inline
@@ -172,4 +177,14 @@ if #classes == 0 then
 end
 
 local result = lunit.TestRunner:fromClasses(classes):run(runOptions):expect()
+if result.coverage ~= nil then
+	if not fs.isDir("coverage") then
+		fs.writeDir("coverage")
+	end
+	fs.writeFile("coverage/lcov.info", lunit.Coverage.toLcov(result.coverage))
+	print("Wrote coverage/lcov.info")
+elseif runOptions.coverage and fs.isFile("coverage/lcov.info") then
+	-- Do not leave an old report that looks like this run's.
+	fs.removeFile("coverage/lcov.info")
+end
 process.exit(if result.numTestsFailed > 0 then 1 else 0)
