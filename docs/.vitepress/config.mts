@@ -11,6 +11,7 @@ export default defineConfig({
 			{ text: "Home", link: "/" },
 			{ text: "Getting Started", link: "/getting-started" },
 			{ text: "API", link: "/api-reference" },
+			{ text: "Tooling", link: "/tooling" },
 		],
 
 		sidebar: [
@@ -27,6 +28,7 @@ export default defineConfig({
 				],
 			},
 			{ text: "API Reference", link: "/api-reference" },
+			{ text: "Tooling", link: "/tooling" },
 			{ text: "Contributing", link: "/contributing" },
 		],
 
