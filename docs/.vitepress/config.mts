@@ -25,6 +25,7 @@ export default defineConfig({
 					{ text: "Writing tests", link: "/guides/writing-tests" },
 					{ text: "Decorators", link: "/guides/decorators" },
 					{ text: "Running under Lune", link: "/guides/lune" },
+					{ text: "Coverage", link: "/guides/coverage" },
 				],
 			},
 			{ text: "API Reference", link: "/api-reference" },

@@ -45,16 +45,17 @@ It needs `lune` on `PATH`.
 
 All arguments are optional:
 
-| Arg                   | Default                         | Meaning                                                                     |
-| --------------------- | ------------------------------- | --------------------------------------------------------------------------- |
-| `tests-root`          | `out`                           | Directory to walk recursively for `*.test.luau` / `*.spec.luau` (or `.lua`) |
-| `lunit-root`          | `node_modules/@rbxts/lunit/out` | Directory containing the compiled Lunit framework                           |
-| `--filter <text>`     |                                 | Run only tests whose `Class.method` or display name contains `<text>`       |
-| `--tag <tag>`         |                                 | Run only tests with this tag. Repeat it, or separate tags with commas       |
-| `--exclude-tag <tag>` |                                 | Leave out tests with this tag. Repeat it, or separate tags with commas      |
-| `--bail`              |                                 | Stop after the first failing test                                           |
-| `--project <file>`    | `default.project.json`          | Rojo project file used to resolve `game:GetService(...)` imports            |
-| `--setup <file>`      | `lunit.setup.luau`, if present  | Setup file run before tests load (see [Setup file](#setup-file))            |
+| Arg                   | Default                         | Meaning                                                                               |
+| --------------------- | ------------------------------- | ------------------------------------------------------------------------------------- |
+| `tests-root`          | `out`                           | Directory to walk recursively for `*.test.luau` / `*.spec.luau` (or `.lua`)           |
+| `lunit-root`          | `node_modules/@rbxts/lunit/out` | Directory containing the compiled Lunit framework                                     |
+| `--filter <text>`     |                                 | Run only tests whose `Class.method` or display name contains `<text>`                 |
+| `--tag <tag>`         |                                 | Run only tests with this tag. Repeat it, or separate tags with commas                 |
+| `--exclude-tag <tag>` |                                 | Leave out tests with this tag. Repeat it, or separate tags with commas                |
+| `--bail`              |                                 | Stop after the first failing test                                                     |
+| `--coverage`          |                                 | Print line coverage and write `coverage/lcov.info` (see [Coverage](/guides/coverage)) |
+| `--project <file>`    | `default.project.json`          | Rojo project file used to resolve `game:GetService(...)` imports                      |
+| `--setup <file>`      | `lunit.setup.luau`, if present  | Setup file run before tests load (see [Setup file](#setup-file))                      |
 
 You only need `lunit-root` if you've vendored Lunit somewhere else. Flags
 also accept `--flag=value`. `lunit --help` prints this list.

@@ -45,6 +45,8 @@ export = TestSum;
 - **Parameterized tests** via `@Each`, **flake handling** via
   `@Retry` / `@Repeat`, **focus mode** via `@Only`, **tag filtering**
   via `@Tag`.
+- **Coverage.** Line coverage of your TypeScript, under Lune and in
+  Studio, with lcov output for Codecov and editor extensions.
 - **Custom reporters.** Override per-test/per-run hooks or replace the
   final summary outright.
 - **Self-contained Lune path.** Ships a runtime shim, a ~115-line Promise
@@ -108,6 +110,7 @@ See [Tooling](https://docs.kong.ly/lunit/tooling.html) for more.
 - [Decorators](https://docs.kong.ly/lunit/guides/decorators.html) — every decorator, with class-level behavior spelled out.
 - [Writing tests](https://docs.kong.ly/lunit/guides/writing-tests.html) — patterns past the basics.
 - [Running under Lune](https://docs.kong.ly/lunit/guides/lune.html) — CI, runtime gating, troubleshooting.
+- [Coverage](https://docs.kong.ly/lunit/guides/coverage.html) — line coverage under Lune and in Studio.
 - [API reference](https://docs.kong.ly/lunit/api-reference.html)
 - [Tooling](https://docs.kong.ly/lunit/tooling.html) — editor support and other tools.
 
