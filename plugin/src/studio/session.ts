@@ -1,5 +1,14 @@
 import type { CoverageReport, LunitModule, Runner } from "../core/lunit";
-import { applyResults, buildTree, DiscoveredClass, keepState, LoadFailure, TestTree } from "../core/tree";
+import {
+	applyResults,
+	buildTree,
+	DiscoveredClass,
+	keepState,
+	LoadFailure,
+	mergePartial,
+	modulesFor,
+	TestTree,
+} from "../core/tree";
 import { findLunit, findRuntimeLib, findTestModules } from "./discovery";
 import { ModuleLoader } from "./loader";
 
@@ -55,8 +64,11 @@ export class Session {
 	public output: string[] = [];
 	private loader?: ModuleLoader;
 
-	/** Loads Lunit and every test module from their current source. */
-	private load(): Loaded {
+	/**
+	 * Loads Lunit and the test modules from their current source: every test
+	 * module, or only those whose full names are in `only`.
+	 */
+	private load(only?: ReadonlySet<string>): Loaded {
 		const lunitModule = findLunit();
 		if (lunitModule === undefined) {
 			error(
@@ -87,6 +99,7 @@ export class Session {
 		const moduleOf = new Map<unknown, ModuleScript>();
 		const classes: defined[] = [];
 		for (const module of findTestModules()) {
+			if (only !== undefined && !only.has(module.GetFullName())) continue;
 			const [ok, value] = pcall(() => loader.require(module));
 			if (!ok) failures.push({ modulePath: module.GetFullName(), message: tostring(value) });
 			else if (value === undefined)
@@ -133,16 +146,25 @@ export class Session {
 			outcome.warning = withUndo(() => {
 				// Instrumented modules register their counts again as they load.
 				(_G as { __lunitCoverage?: unknown }).__lunitCoverage = undefined;
-				const loaded = this.load();
+				// A selection loads only its own test modules, so coverage lists just
+				// the files those tests import, and the run is faster.
+				const only = tests !== undefined && this.tree !== undefined ? modulesFor(this.tree, tests) : undefined;
+				const loaded = this.load(only);
 				this.loader = loaded.loader;
 				const output: string[] = [];
 				const result = loaded.runner
 					.run({ tests, coverage, reporter: { output: (text) => output.push(text) } })
 					.expect();
 
-				const tree = keepState(buildTree(loaded.discovered, loaded.failures), this.tree);
+				const loadedTree = keepState(buildTree(loaded.discovered, loaded.failures), this.tree);
+				const tree =
+					only !== undefined && this.tree !== undefined
+						? mergePartial(this.tree, loadedTree, only)
+						: loadedTree;
 				const rowFor = new Map<unknown, (typeof tree.classes)[number]>();
-				loaded.discovered.forEach((entry, index) => rowFor.set(entry.plan.testClass, tree.classes[index]));
+				loaded.discovered.forEach((entry, index) =>
+					rowFor.set(entry.plan.testClass, loadedTree.classes[index]),
+				);
 				for (const [testClass, classResult] of result.tests) {
 					const row = rowFor.get(testClass);
 					if (row !== undefined) applyResults(row, classResult.tests);

@@ -1,6 +1,17 @@
 import { Assert, Test } from "@rbxts/lunit";
 import type { PlanClass } from "./lunit";
-import { applyResults, buildTree, classStatus, countStatuses, keepState, parseQuery, testNames, visible } from "./tree";
+import {
+	applyResults,
+	buildTree,
+	classStatus,
+	countStatuses,
+	keepState,
+	mergePartial,
+	modulesFor,
+	parseQuery,
+	testNames,
+	visible,
+} from "./tree";
 
 function shopPlan(): PlanClass {
 	return {
@@ -106,6 +117,35 @@ class TestTree {
 	@Test
 	public testNamesAreExactAndUnique() {
 		Assert.deepEqual(testNames(visible(tree(), parseQuery("prices"))), ["TestShop.prices"]);
+	}
+
+	@Test
+	public findsTheModulesOfSelectedTests() {
+		const t = buildTree([
+			{ modulePath: "RS.shop.test", plan: shopPlan() },
+			{ modulePath: "RS.other.test", plan: { ...shopPlan(), name: "TestOther" } },
+		]);
+		Assert.deepEqual([...modulesFor(t, ["TestShop.buys", "TestShop.prices"])!], ["RS.shop.test"]);
+		Assert.equal(modulesFor(t, ["TestMissing.buys"]), undefined);
+	}
+
+	@Test
+	public mergesAPartialLoadIntoTheFullTree() {
+		const other = { ...shopPlan(), name: "TestOther" };
+		const full = buildTree([
+			{ modulePath: "RS.shop.test", plan: shopPlan() },
+			{ modulePath: "RS.other.test", plan: other },
+		]);
+		applyResults(full.classes[1], [result("buys", false, { errorMessage: "old" })]);
+		const partial = buildTree([{ modulePath: "RS.shop.test", plan: shopPlan() }]);
+		applyResults(partial.classes[0], [result("buys", true)]);
+		const merged = mergePartial(full, partial, new Set(["RS.shop.test"]));
+		Assert.deepEqual(
+			merged.classes.map((c) => c.name),
+			["TestShop", "TestOther"],
+		);
+		Assert.equal(merged.classes[0].tests[0].status, "passed");
+		Assert.equal(merged.classes[1].tests[0].message, "old", "untouched classes keep their results");
 	}
 }
 

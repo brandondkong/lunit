@@ -97,6 +97,43 @@ export function keepState(fresh: TestTree, previous: TestTree | undefined): Test
 	return fresh;
 }
 
+/**
+ * Puts the classes from a partial load (only some modules) back into the full
+ * tree: classes from those modules are replaced, the rest stay as they were,
+ * in their old order. New classes go at the end.
+ */
+export function mergePartial(full: TestTree, partial: TestTree, loadedModules: ReadonlySet<string>): TestTree {
+	const fresh = new Map(partial.classes.map((c) => [c.id, c]));
+	const classes: ClassRow[] = [];
+	for (const cls of full.classes) {
+		if (!loadedModules.has(cls.modulePath)) classes.push(cls);
+		else if (fresh.has(cls.id)) {
+			classes.push(fresh.get(cls.id)!);
+			fresh.delete(cls.id);
+		}
+	}
+	for (const cls of partial.classes) if (fresh.has(cls.id)) classes.push(cls);
+	const loadFailures = [
+		...full.loadFailures.filter((f) => !loadedModules.has(f.modulePath)),
+		...partial.loadFailures,
+	];
+	return { classes, loadFailures };
+}
+
+/** The modules that hold these `Class.method` tests, or undefined if any class is unknown. */
+export function modulesFor(tree: TestTree, names: readonly string[]): Set<string> | undefined {
+	const moduleOf = new Map<string, string>();
+	for (const cls of tree.classes) moduleOf.set(cls.name, cls.modulePath);
+	const modules = new Set<string>();
+	for (const name of names) {
+		const [className] = name.match("^(.-)%.[^%.]+$");
+		const modulePath = className !== undefined ? moduleOf.get(className as string) : undefined;
+		if (modulePath === undefined) return undefined;
+		modules.add(modulePath);
+	}
+	return modules;
+}
+
 /** Applies one class's results from a run. Rows the run did not include keep their status. */
 export function applyResults(cls: ClassRow, results: CaseResult[]) {
 	for (const result of results) {
