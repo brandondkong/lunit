@@ -26,7 +26,10 @@ export function resolveTestLabel(method: Method, caseArgs?: ReadonlyArray<unknow
  * `"Roblox"` (or `"Studio"`) runs only under Roblox. Returns the skip reason
  * when the current runtime is not one of the tagged runtimes.
  */
-export function getRuntimeSkipReason(tags: ReadonlyArray<string>): string | undefined {
+export function getRuntimeSkipReason(
+	tags: ReadonlyArray<string>,
+	underLune: boolean = Runtime.isLune(),
+): string | undefined {
 	let lune = false;
 	let roblox = false;
 	for (const tag of tags) {
@@ -34,7 +37,7 @@ export function getRuntimeSkipReason(tags: ReadonlyArray<string>): string | unde
 		else if (tag === "Roblox" || tag === "Studio") roblox = true;
 	}
 	if (!lune && !roblox) return undefined;
-	if (Runtime.isLune()) return lune ? undefined : "Roblox only";
+	if (underLune) return lune ? undefined : "Roblox only";
 	return roblox ? undefined : "Lune only";
 }
 

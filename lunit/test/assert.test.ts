@@ -169,6 +169,28 @@ class TestAssert {
 	}
 
 	@Test
+	public timeout() {
+		Assert.timeout(Promise.resolve(1), 100);
+		Assert.throws(() => Assert.timeout(Promise.delay(1), 10), "resolve within 10ms");
+	}
+
+	@Test
+	public orEqualComparisonsFail() {
+		Assert.throws(() => Assert.greaterThanOrEqual(1, 2), "greater than or equal to 2");
+		Assert.throws(() => Assert.lessThanOrEqual(2, 1), "less than or equal to 1");
+	}
+
+	@Test
+	public deepEqualNamesNonStringKeys() {
+		Assert.throws(() => Assert.deepEqual(new Map([[true, 1]]), new Map([[true, 2]])), "at [true]");
+	}
+
+	@Test
+	public deepEqualLimitsShownDiffs() {
+		Assert.throws(() => Assert.deepEqual([1, 2, 3, 4, 5, 6, 7], [0, 0, 0, 0, 0, 0, 0]), "...and 2 more");
+	}
+
+	@Test
 	public rejects() {
 		Assert.rejects(Promise.reject("nope"));
 		Assert.throws(() => Assert.rejects(Promise.resolve(1)));

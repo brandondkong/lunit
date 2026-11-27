@@ -28,16 +28,6 @@ export function addMethodMetadata<T extends object>(
 	}
 }
 
-export function getMethodMetadata<T extends object>(ctor: T, name: string): MethodMetadata | undefined {
-	const ctorCast = ctor as Record<string, Map<string, Method> | undefined>;
-	const methods = ctorCast[MetadataKey.Method];
-	if (methods) {
-		return methods.get(name)?.options;
-	}
-
-	return undefined;
-}
-
 export function addClassMetadata<T extends object>(ctor: T, transform: (options: BaseMetadata) => void): void {
 	const ctorCast = ctor as Record<string, BaseMetadata | undefined>;
 	if (!ctorCast[MetadataKey.Class]) {
