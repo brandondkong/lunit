@@ -194,11 +194,11 @@ either a `string` or a `() => string` lazy message.
 
 ### Promises
 
-| Method                                      | Notes                                  |
-| ------------------------------------------- | -------------------------------------- |
-| `Assert.resolves(promise, msg?)`            | Synchronously waits via `awaitStatus`. |
-| `Assert.rejects(promise, msg?)`             |                                        |
-| `Assert.timeout(promise, durationMs, msg?)` | Returns a `Promise<void>`.             |
+| Method                                      | Notes                                                                               |
+| ------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `Assert.resolves(promise, msg?)`            | Synchronously waits via `awaitStatus`.                                              |
+| `Assert.rejects(promise, msg?)`             |                                                                                     |
+| `Assert.timeout(promise, durationMs, msg?)` | Fails if the promise does not resolve within `durationMs`. Waits via `awaitStatus`. |
 
 ## `Runtime`
 
