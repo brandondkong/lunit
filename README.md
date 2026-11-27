@@ -5,7 +5,7 @@ them in Studio against a live DataModel **or** outside Roblox under Lune
 in milliseconds — same `*.test.ts` files, same output.
 
 [![npm version](https://img.shields.io/npm/v/@rbxts/lunit.svg)](https://www.npmjs.com/package/@rbxts/lunit)
-[![CI](https://github.com/brandon-kong/lunit/actions/workflows/test.yml/badge.svg)](https://github.com/brandon-kong/lunit/actions/workflows/test.yml)
+[![CI](https://github.com/brandondkong/lunit/actions/workflows/test.yml/badge.svg)](https://github.com/brandondkong/lunit/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-vitepress-brightgreen.svg)](https://docs.kong.ly/lunit/)
 

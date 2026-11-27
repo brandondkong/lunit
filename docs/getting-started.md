@@ -140,5 +140,5 @@ Under Lune this case appears as `SKIPPED`; under Roblox it runs normally.
 
 ## Resources
 
-- [GitHub](https://github.com/brandon-kong/lunit)
+- [GitHub](https://github.com/brandondkong/lunit)
 - [npm](https://www.npmjs.com/package/@rbxts/lunit)
