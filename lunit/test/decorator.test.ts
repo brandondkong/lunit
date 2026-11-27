@@ -128,6 +128,21 @@ class TestDecorators {
 	}
 
 	@Test
+	public async stackedTagsAddUp() {
+		class Subject {
+			@Tag("smoke")
+			@Tag("slow")
+			@Test
+			public both() {}
+		}
+
+		const smoke = await runIsolated([Subject], { tags: ["smoke"] });
+		const slow = await runIsolated([Subject], { tags: ["slow"] });
+		Assert.equal(smoke.numTests, 1);
+		Assert.equal(slow.numTests, 1);
+	}
+
+	@Test
 	public async tagFiltersTests() {
 		class Subject {
 			@Tag("smoke")
