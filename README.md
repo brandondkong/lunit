@@ -94,6 +94,14 @@ Or drop it into `package.json`:
 `lunit --help` lists the options: `--filter`, `--tag`, `--exclude-tag`,
 `--bail` and more.
 
+## Tooling
+
+- [Lunit Test Companion](https://marketplace.visualstudio.com/items?itemName=ShaderCloud.vscode-lunit-companion)
+  (VS Code, by ShaderCloud) — runs your tests from the Test Explorer, under
+  Lune or in Roblox Studio.
+
+See [Tooling](https://docs.kong.ly/lunit/tooling.html) for more.
+
 ## Documentation
 
 - [Getting Started](https://docs.kong.ly/lunit/getting-started.html) — Roblox, Lune, and both.
@@ -101,6 +109,7 @@ Or drop it into `package.json`:
 - [Writing tests](https://docs.kong.ly/lunit/guides/writing-tests.html) — patterns past the basics.
 - [Running under Lune](https://docs.kong.ly/lunit/guides/lune.html) — CI, runtime gating, troubleshooting.
 - [API reference](https://docs.kong.ly/lunit/api-reference.html)
+- [Tooling](https://docs.kong.ly/lunit/tooling.html) — editor support and other tools.
 
 ## Contributing
 
