@@ -4,8 +4,18 @@ function resolveMessage(message: AssertMessage): string {
 	return typeIs(message, "string") ? message : message();
 }
 
+const ASSERT_SOURCE = debug.info(1, "s")[0];
+
+/**
+ * Raises the failure at the first stack frame outside this module, so the
+ * message starts with the test's own location (`path:line: ...`), as a plain
+ * `error()` in the test would.
+ */
 function fail(fallbackMessage: string, message?: AssertMessage): never {
-	throw message !== undefined ? resolveMessage(message) : fallbackMessage;
+	const text = message !== undefined ? resolveMessage(message) : fallbackMessage;
+	let level = 2;
+	while (debug.info(level, "s")[0] === ASSERT_SOURCE) level++;
+	error(text, level);
 }
 
 interface Diff {
