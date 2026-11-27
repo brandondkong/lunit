@@ -13,6 +13,11 @@ export {
 	BeforeEach,
 	Tag,
 	Negated,
+	Skip,
+	Only,
+	Each,
+	Retry,
+	Repeat,
 } from "./lib/decorator";
 export * as Decorators from "./lib/decorator";
 
