@@ -93,6 +93,12 @@ Or drop it into `package.json`:
 }
 ```
 
+In GitHub Actions, one step installs Lune, builds and runs the tests:
+
+```yaml
+- uses: brandondkong/lunit/action@v4
+```
+
 `lunit --help` lists the options: `--filter`, `--tag`, `--exclude-tag`,
 `--bail` and more.
 

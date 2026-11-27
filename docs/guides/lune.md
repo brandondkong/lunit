@@ -67,12 +67,44 @@ npx lunit --tag smoke --bail              # smoke tests, stop at the first failu
 npx lunit --exclude-tag slow,integration  # everything but slow and integration tests
 ```
 
-The runner exits non-zero on any failure, so it composes with CI:
+The runner exits non-zero on any failure, so it composes with CI.
+
+### GitHub Actions
+
+The Lunit action installs Lune, builds your project and runs the tests:
 
 ```yaml
 # .github/workflows/test.yml
-- run: pnpm install --frozen-lockfile
-- run: pnpm run build
+- uses: actions/checkout@v4
+- uses: actions/setup-node@v4
+  with:
+      node-version: 20
+- run: npm ci
+- uses: brandondkong/lunit/action@v4
+```
+
+Install your npm dependencies before the action; it runs `npx rbxtsc` and
+`npx lunit`. It needs `@rbxts/lunit` 4.3 or later in your project.
+
+| Input               | Default      | Meaning                                                                                          |
+| ------------------- | ------------ | ------------------------------------------------------------------------------------------------ |
+| `working-directory` | `.`          | Folder of the roblox-ts project                                                                  |
+| `build`             | `npx rbxtsc` | Build command. Empty skips the build. With `coverage`, the default uses `tsconfig.coverage.json` |
+| `coverage`          | `false`      | Run with `--coverage` and add a coverage table to the job summary                                |
+| `args`              |              | More `lunit` arguments, for example `--tag smoke --bail`                                         |
+| `lune-version`      | `0.10.4`     | Lune version to install, if `lune` is not on `PATH` already                                      |
+
+With `coverage: true`, the action has two outputs: `coverage` (the line
+coverage in percent, for example `91.5`) and `lcov-path`. See
+[Coverage](/guides/coverage#in-ci).
+
+### Other CI
+
+Install Lune (for example with Rokit), build, and run `npx lunit`:
+
+```yaml
+- run: npm ci
+- run: npx rbxtsc
 - uses: CompeyDev/setup-rokit@v0.1.2
 - run: npx lunit
 ```
