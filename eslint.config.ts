@@ -4,7 +4,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import prettierRecommended from "eslint-plugin-prettier/recommended";
 
 export default defineConfig([
-	globalIgnores(["out/", "docs/", "test/", "scripts/"]),
+	globalIgnores(["out/", "docs/", "test/", "scripts/", "plugin/"]),
 	prettierRecommended,
 	roblox.parser,
 	{

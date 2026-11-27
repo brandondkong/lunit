@@ -26,5 +26,5 @@
 		"declaration": true
 	},
 
-	"exclude": ["out", "test", "scripts", "docs", "eslint.config.ts"]
+	"exclude": ["out", "test", "scripts", "docs", "plugin", "eslint.config.ts"]
 }
