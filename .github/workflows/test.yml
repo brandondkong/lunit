@@ -40,4 +40,4 @@ jobs:
 
             # Lunit's own coverage, shown in the job summary.
             - run: pnpm run test:coverage
-            - run: node .github/scripts/coverage-summary.js >> "$GITHUB_STEP_SUMMARY"
+            - run: node action/coverage-summary.js >> "$GITHUB_STEP_SUMMARY"

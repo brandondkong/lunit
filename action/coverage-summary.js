@@ -1,4 +1,6 @@
-// Prints coverage/lcov.info as a Markdown table, for $GITHUB_STEP_SUMMARY.
+// Prints an lcov file as a Markdown table, for $GITHUB_STEP_SUMMARY.
+// When $GITHUB_OUTPUT is set, also writes the `coverage` output (the line
+// coverage as a percentage, e.g. `91.5`).
 "use strict";
 const fs = require("fs");
 
@@ -13,13 +15,17 @@ for (const record of fs.readFileSync(file, "utf8").split("end_of_record")) {
 	const lf = Number(record.match(/^LF:(\d+)$/m)[1]);
 	hit += lh;
 	found += lf;
-	rows.push(`| \`${name[1]}\` | ${percent(lh, lf)} | ${lh}/${lf} |`);
+	rows.push(`| \`${name[1]}\` | ${percent(lh, lf)}% | ${lh}/${lf} |`);
 }
 
 function percent(h, f) {
-	return `${(f > 0 ? (h / f) * 100 : 100).toFixed(1)}%`;
+	return (f > 0 ? (h / f) * 100 : 100).toFixed(1);
 }
 
-console.log(`### Coverage: ${percent(hit, found)} (${hit}/${found} lines)\n`);
+console.log(`### Coverage: ${percent(hit, found)}% (${hit}/${found} lines)\n`);
 console.log("| File | Lines | Hit |\n| --- | ---: | ---: |");
 console.log(rows.join("\n"));
+
+if (process.env.GITHUB_OUTPUT) {
+	fs.appendFileSync(process.env.GITHUB_OUTPUT, `coverage=${percent(hit, found)}\n`);
+}
