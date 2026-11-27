@@ -1,5 +1,6 @@
 import { MetadataKey } from "../shared/enums";
 import { Method } from "../shared/types";
+import { CoverageReport } from "../coverage";
 
 export type Constructor<T = object> = new (...args: never[]) => T;
 export type TestClassInstance = object;
@@ -17,6 +18,11 @@ export type TestRunOptions = {
 	filter?: string;
 	/** Stop after the first failing test. Tests after it are not run or reported. */
 	bail?: boolean;
+	/**
+	 * After the report, print line coverage and add it to the result. Needs a
+	 * build made with the Lunit transformer (`@rbxts/lunit/transformer`).
+	 */
+	coverage?: boolean;
 	reporter?: Reporter;
 };
 
@@ -35,6 +41,8 @@ export interface TestClassRunResult extends BaseTestRunResult {
 export interface TestRunResult extends BaseTestRunResult {
 	tags?: string[];
 	tests: Map<TestClassConstructor, TestClassRunResult>;
+	/** Line coverage, when the run used `coverage: true` and coverage data exists. */
+	coverage?: CoverageReport;
 }
 
 export interface TestCaseResult {
