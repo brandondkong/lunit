@@ -36,4 +36,8 @@ jobs:
             - run: pnpm run test:game
 
             # Coverage build of the same project, checked against markers in the source.
+            - run: pnpm run test:game:coverage
+
+            # Lunit's own coverage, shown in the job summary.
             - run: pnpm run test:coverage
+            - run: node .github/scripts/coverage-summary.js >> "$GITHUB_STEP_SUMMARY"
