@@ -1,5 +1,18 @@
 import Assert from "../lib/assert";
-import { BeforeAll, BeforeEach, Disabled, DisplayName, Negated, Tag, Test, Timeout } from "../lib/decorator";
+import {
+	BeforeAll,
+	BeforeEach,
+	Disabled,
+	DisplayName,
+	Each,
+	Negated,
+	Only,
+	Order,
+	Tag,
+	Test,
+	Timeout,
+} from "../lib/decorator";
+import * as Lunit from "../index";
 import { formatTestResult } from "../lib/reporter/printer";
 import { Runtime } from "../lib/runtime";
 import { getRuntimeSkipReason } from "../lib/runner/class";
@@ -410,6 +423,135 @@ class TestRunnerApi {
 		Assert.equal(getRuntimeSkipReason(["Studio"], false), undefined);
 		Assert.equal(getRuntimeSkipReason(["Lune"], false), "Lune only");
 		Assert.equal(getRuntimeSkipReason(["Lune", "Roblox"], false), undefined);
+	}
+
+	@Test
+	public describeListsTestsWithoutRunningThem() {
+		let ran = false;
+		@DisplayName("Shop")
+		@Tag("smoke")
+		class Subject {
+			@Test
+			public plain() {
+				ran = true;
+			}
+
+			@DisplayName("adds numbers")
+			@Each([
+				[1, 2],
+				[3, 4],
+			])
+			@Test
+			public adds(a: number, b: number) {
+				Assert.notUndefined(a + b);
+			}
+
+			@Disabled("not yet")
+			@Test
+			public later() {}
+
+			@Tag("Roblox")
+			@Test
+			public robloxOnly() {}
+		}
+
+		const plan = TestRunner.fromClasses([Subject]).describe();
+		Assert.false(ran);
+		Assert.equal(plan.numTests, 5);
+		const described = plan.classes[0];
+		Assert.equal(described.testClass, Subject);
+		Assert.equal(described.name, "Subject");
+		Assert.equal(described.displayName, "Shop");
+		Assert.deepEqual(described.tags, ["smoke"]);
+		const byName = new Map(described.tests.map((t) => [t.name, t]));
+		Assert.deepEqual(byName.get("adds")!.cases, ["adds numbers (1, 2)", "adds numbers (3, 4)"]);
+		Assert.equal(byName.get("adds")!.displayName, "adds numbers");
+		Assert.deepEqual(byName.get("plain")!.cases, []);
+		Assert.equal(byName.get("later")!.skipReason, "not yet");
+		Assert.equal(byName.get("robloxOnly")!.skipReason, Runtime.isLune() ? "Roblox only" : undefined);
+	}
+
+	@Test
+	public describeFollowsRunOptionsAndFocus() {
+		class Kept {
+			@Tag("fast")
+			@Test
+			public a() {}
+
+			@Test
+			public b() {}
+		}
+		class Dropped {
+			@Test
+			public c() {}
+		}
+		const runner = TestRunner.fromClasses([Kept, Dropped]);
+		const plan = runner.describe({ tags: ["fast"] });
+		Assert.equal(plan.classes.size(), 1);
+		Assert.deepEqual(
+			plan.classes[0].tests.map((t) => t.name),
+			["a"],
+		);
+
+		@Only
+		class Focused {
+			@Test
+			public d() {}
+		}
+		Assert.deepEqual(
+			TestRunner.fromClasses([Kept, Focused])
+				.describe()
+				.classes.map((c) => c.name),
+			["Focused"],
+		);
+	}
+
+	@Test
+	public describeMarksSkippedClasses() {
+		@Disabled("whole class")
+		class Off {
+			@Test
+			public a() {}
+		}
+		@Order(1)
+		@Tag("Lune")
+		class LuneOnly {
+			@Test
+			public b() {}
+		}
+		const plan = TestRunner.fromClasses([Off, LuneOnly]).describe();
+		Assert.equal(plan.classes[0].name, "LuneOnly");
+		Assert.equal(plan.classes[0].skipReason, Runtime.isLune() ? undefined : "Lune only");
+		Assert.equal(plan.classes[1].skipReason, "whole class");
+	}
+
+	@Test
+	public everyDecoratorIsExportedFromTheRoot() {
+		for (const name of ["Skip", "Only", "Each", "Retry", "Repeat", "Test", "Tag"]) {
+			Assert.notUndefined((Lunit as unknown as Record<string, unknown>)[name], `${name} is not exported`);
+		}
+	}
+
+	@Test
+	public async testsOptionRunsExactNames() {
+		class Shop {
+			@Test
+			public buy() {}
+
+			@Test
+			public buyMany() {}
+		}
+		class Other {
+			@Test
+			public buy() {}
+		}
+		const result = await TestRunner.fromClasses([Shop, Other]).run({
+			tests: ["Shop.buy"],
+			reporter: silentReporter,
+		});
+		Assert.equal(result.numTests, 1);
+		Assert.equal(result.tests.get(Shop)!.tests[0].method.name, "buy");
+		Assert.equal(result.tests.get(Other), undefined);
 	}
 }
 

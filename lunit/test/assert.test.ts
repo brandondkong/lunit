@@ -169,6 +169,16 @@ class TestAssert {
 	}
 
 	@Test
+	public failuresPointAtTheCallingLine() {
+		const [ok, err] = pcall(() => Assert.equal(1, 2));
+		Assert.false(ok);
+		const message = tostring(err);
+		Assert.notUndefined(message.find("assert.test", 1, true)[0], message);
+		Assert.notUndefined(message.find("Expected 1 to equal 2", 1, true)[0], message);
+		Assert.undefined(message.find("assert/init", 1, true)[0], message);
+	}
+
+	@Test
 	public timeout() {
 		Assert.timeout(Promise.resolve(1), 100);
 		Assert.throws(() => Assert.timeout(Promise.delay(1), 10), "resolve within 10ms");

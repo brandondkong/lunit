@@ -4,7 +4,7 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [4.4.0] - 2026-11-27
 
 ### Added
 
@@ -12,6 +12,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   builds the project and runs `lunit`. With `coverage: true`, it builds with
   `tsconfig.coverage.json`, adds a coverage table to the job summary, and
   sets the `coverage` and `lcov-path` outputs.
+- **Studio plugin.** `plugin/` holds a Roblox Studio plugin that lists, runs
+  and inspects tests in Edit mode, with search, tag filters, failure details
+  and coverage. It runs the project's own copy of Lunit and undoes changes the
+  tests make. See the Studio plugin guide.
+- **`TestRunner.describe(options?)`** lists the classes and tests a run would
+  run, with display names, tags, `@Each` rows and skip reasons, without
+  running them.
+- **`tests` run option.** Runs only tests with these exact `Class.method`
+  names.
+
+### Changed
+
+- **Assertion failures point at the test.** A failed `Assert` raises its
+  error at the calling line, so the message starts with the test's location
+  (`path:line: Expected ...`), as a plain `error()` in the test would.
+
+### Fixed
+
+- **`Skip`, `Only`, `Each`, `Retry` and `Repeat` are exported from the package
+  root.** Before, they were only under `Decorators`, so
+  `import { Skip } from "@rbxts/lunit"` did not compile.
 
 ## [4.3.0] - 2026-11-27
 

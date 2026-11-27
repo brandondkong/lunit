@@ -1,0 +1,10 @@
+{
+	"name": "Lunit",
+	"globIgnorePaths": ["**/*.test.luau", "**/tsconfig.tsbuildinfo"],
+	"tree": {
+		"$path": "out",
+		"include": {
+			"$path": "include"
+		}
+	}
+}

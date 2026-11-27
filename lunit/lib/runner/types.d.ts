@@ -16,6 +16,11 @@ export type TestRunOptions = {
 	 * display names set with `@DisplayName` match too. Case-sensitive.
 	 */
 	filter?: string;
+	/**
+	 * Run only these tests, by exact `Class.method` name. Every `@Each` row of a
+	 * listed method runs. Combines with the other filters.
+	 */
+	tests?: string[];
 	/** Stop after the first failing test. Tests after it are not run or reported. */
 	bail?: boolean;
 	/**
@@ -43,6 +48,39 @@ export interface TestRunResult extends BaseTestRunResult {
 	tests: Map<TestClassConstructor, TestClassRunResult>;
 	/** Line coverage, when the run used `coverage: true` and coverage data exists. */
 	coverage?: CoverageReport;
+}
+
+/** What `TestRunner.describe` returns: the tests a run with the same options would run. */
+export interface TestPlan {
+	classes: TestPlanClass[];
+	/** Total invocations, counting each `@Each` row. */
+	numTests: number;
+}
+
+export interface TestPlanClass {
+	/** The class itself; the same key as in `TestRunResult.tests`. */
+	testClass: TestClassConstructor;
+	/** The class name. */
+	name: string;
+	/** `@DisplayName`, or the class name. */
+	displayName: string;
+	tags: string[];
+	/** Set when the whole class will be skipped: `@Disabled`, `@Skip`, or a runtime tag for the other runtime. */
+	skipReason?: string;
+	tests: TestPlanTest[];
+}
+
+export interface TestPlanTest {
+	/** The method name. */
+	name: string;
+	/** `@DisplayName`, or the method name. */
+	displayName: string;
+	/** The test's own tags. The class's tags are on the class. */
+	tags: string[];
+	/** One label per `@Each` row, as in `TestCaseResult.label`. Empty when the test is not parameterized. */
+	cases: string[];
+	/** Set when the test will be skipped. */
+	skipReason?: string;
 }
 
 export interface TestCaseResult {

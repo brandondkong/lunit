@@ -32,6 +32,18 @@ jobs:
 
             - run: lune run scripts/lunit.luau
 
+            # Studio plugin: its own tests under Lune, then the .rbxm.
+            - run: pnpm install --frozen-lockfile
+              working-directory: plugin
+            - run: pnpm test
+              working-directory: plugin
+            - run: pnpm run build:plugin
+              working-directory: plugin
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: Lunit-plugin
+                  path: plugin/Lunit.rbxm
+
             # Game-type project (test/) built against the packed tarball.
             - run: pnpm run test:game
 

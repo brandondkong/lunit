@@ -10,6 +10,7 @@ import {
 	TestClassConstructor,
 	TestClassInstance,
 	TestClassRunResult,
+	TestPlanClass,
 	TestRunOptions,
 } from "./types";
 
@@ -60,6 +61,33 @@ export class TestClassRunner {
 
 	public getMetadata(): BaseMetadata {
 		return this.metadata;
+	}
+
+	/** The tests `runTests` would run with these options, without running them. */
+	public describe(options: TestRunOptions): TestPlanClass {
+		const classSkip = this.metadata.disabled?.value
+			? (this.metadata.disabled.message ?? "disabled")
+			: getRuntimeSkipReason(this.metadata.tags ?? []);
+		return {
+			testClass: this.testClassConstructor,
+			name: tostring(this.testClassConstructor),
+			displayName: this.getClassDisplayName(),
+			tags: table.clone(this.metadata.tags ?? []),
+			skipReason: classSkip,
+			tests: this.getTestsFromTestClass(options).map((method) => {
+				const cases = method.options.cases ?? [];
+				const skipReason = method.options.disabled?.value
+					? (method.options.disabled.message ?? "disabled")
+					: getRuntimeSkipReason(method.options.tags ?? []);
+				return {
+					name: method.name,
+					displayName: method.options.displayName ?? method.name,
+					tags: table.clone(method.options.tags ?? []),
+					cases: cases.map((args) => resolveTestLabel(method, args)),
+					skipReason,
+				};
+			}),
+		};
 	}
 
 	public async runTests(options: TestRunOptions): Promise<TestClassRunResult> {
@@ -169,7 +197,12 @@ export class TestClassRunner {
 				const methodTags = val.options.tags ?? [];
 				return !sharesOneElement(excludeTags, classTags) && !sharesOneElement(excludeTags, methodTags);
 			})
-			.filter((val) => options.filter === undefined || this.matchesFilter(val, options.filter));
+			.filter((val) => options.filter === undefined || this.matchesFilter(val, options.filter))
+			.filter(
+				(val) =>
+					options.tests === undefined ||
+					options.tests.includes(`${tostring(this.testClassConstructor)}.${val.name}`),
+			);
 
 		const focused = filtered.filter((val) => val.options.only);
 		const candidates = focused.size() > 0 ? focused : filtered;

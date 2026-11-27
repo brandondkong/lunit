@@ -69,16 +69,34 @@ await new TestRunner([root]).run({
 });
 ```
 
+#### `describe(options?)`
+
+Lists the classes and tests that `run` would run with the same options,
+without running anything. Editors and plugins use it to show a test tree.
+
+```ts
+const plan = TestRunner.fromClasses([TestShop]).describe({ tags: ["smoke"] });
+for (const cls of plan.classes) print(cls.displayName, cls.tests.size());
+```
+
+`TestPlan` has `classes: TestPlanClass[]` and `numTests` (each `@Each` row
+counts). A `TestPlanClass` has `testClass` (the constructor, the same key as
+in `TestRunResult.tests`), `name`, `displayName`, `tags`, an optional
+`skipReason` and `tests: TestPlanTest[]`. A `TestPlanTest` has `name`,
+`displayName`, its own `tags`, `cases` (one label per `@Each` row, empty when
+not parameterized) and an optional `skipReason`.
+
 `TestRunOptions`:
 
-| Field         | Type       | Notes                                                                                |
-| ------------- | ---------- | ------------------------------------------------------------------------------------ |
-| `tags`        | `string[]` | Run only tests whose tag (or class tag) overlaps these.                              |
-| `excludeTags` | `string[]` | Leave out tests whose tag (or class tag) overlaps these.                             |
-| `filter`      | `string`   | Run only tests whose `Class.method` or display name contains this text (plain text). |
-| `bail`        | `boolean`  | Stop after the first failing test. Later tests are not run or reported.              |
-| `coverage`    | `boolean`  | After the report, print line coverage. See [Coverage](/guides/coverage).             |
-| `reporter`    | `Reporter` | Override per-test and per-run callbacks. See [Reporter](#reporter).                  |
+| Field         | Type       | Notes                                                                                          |
+| ------------- | ---------- | ---------------------------------------------------------------------------------------------- |
+| `tags`        | `string[]` | Run only tests whose tag (or class tag) overlaps these.                                        |
+| `excludeTags` | `string[]` | Leave out tests whose tag (or class tag) overlaps these.                                       |
+| `filter`      | `string`   | Run only tests whose `Class.method` or display name contains this text (plain text).           |
+| `tests`       | `string[]` | Run only these tests, by exact `Class.method` name. Every `@Each` row of a listed method runs. |
+| `bail`        | `boolean`  | Stop after the first failing test. Later tests are not run or reported.                        |
+| `coverage`    | `boolean`  | After the report, print line coverage. See [Coverage](/guides/coverage).                       |
+| `reporter`    | `Reporter` | Override per-test and per-run callbacks. See [Reporter](#reporter).                            |
 
 With `tags`, `excludeTags` or `filter` set, classes left with no tests are not
 in `TestRunResult.tests`.
