@@ -1,8 +1,10 @@
 import Assert from "../lib/assert";
-import { BeforeAll, BeforeEach, Disabled, DisplayName, Negated, Tag, Test } from "../lib/decorator";
+import { BeforeAll, BeforeEach, Disabled, DisplayName, Negated, Tag, Test, Timeout } from "../lib/decorator";
 import { formatTestResult } from "../lib/reporter/printer";
 import { Runtime } from "../lib/runtime";
+import { getRuntimeSkipReason } from "../lib/runner/class";
 import { TestRunner } from "../lib/runner/runner";
+import DiscoveredFixture from "./fixtures/discovered.fixture";
 
 const silentReporter = { output: () => {} };
 
@@ -325,6 +327,89 @@ class TestRunnerApi {
 		Assert.equal(test.errorMessage, "class is off");
 		const line = formatTestResult(test).toString();
 		Assert.notUndefined(line.find("SKIPPED (class is off)", 1, true)[0]);
+	}
+
+	@Test
+	public async addRootFindsMatchingModules() {
+		// The import above loads the fixture, so its ModuleScript exists under Lune too.
+		Assert.notEqual(DiscoveredFixture, undefined);
+		const fixtures = script.Parent!.FindFirstChild("fixtures")!;
+		const result = await new TestRunner([fixtures], ".+%.fixture$").run({ reporter: silentReporter });
+		Assert.equal(result.numTests, 1);
+		Assert.equal(result.numTestsPassed, 1);
+	}
+
+	@Test
+	public async addRootSkipsModulesThatDoNotMatch() {
+		const fixtures = script.Parent!.FindFirstChild("fixtures")!;
+		const result = await new TestRunner([fixtures, undefined]).run({ reporter: silentReporter });
+		Assert.equal(result.numTests, 0);
+	}
+
+	@Test
+	public async addRootSurvivesModulesThatFailToLoad() {
+		const root = new Instance("Folder");
+		const broken = new Instance("ModuleScript");
+		broken.Name = "broken.test";
+		broken.Parent = root;
+		const result = await new TestRunner().addRoot(root).run({ reporter: silentReporter });
+		Assert.equal(result.numTests, 0);
+		root.Destroy();
+	}
+
+	@Test
+	public async addClassIgnoresValuesThatAreNotClasses() {
+		const runner = new TestRunner()
+			.addClass(undefined as unknown as new () => object)
+			.addClass({} as unknown as new () => object);
+		const result = await runner.run({ reporter: silentReporter });
+		Assert.equal(result.numTests, 0);
+	}
+
+	@Test
+	public runRejectsWhenTestMethodIsMissing() {
+		class Subject {
+			@Test
+			public gone() {}
+		}
+		(Subject as unknown as { gone?: unknown }).gone = undefined;
+		Assert.rejects(TestRunner.fromClasses([Subject]).run({ reporter: silentReporter }));
+	}
+
+	@Test
+	public async failingHookDoesNotStopTheTest() {
+		class Subject {
+			@BeforeEach
+			public broken() {
+				error("hook failed");
+			}
+
+			@Test
+			public a() {}
+		}
+		const result = await TestRunner.fromClasses([Subject]).run({ reporter: silentReporter });
+		Assert.equal(result.numTestsPassed, 1);
+	}
+
+	@Test
+	public async timeoutTestThatFinishesInTimePasses() {
+		class Subject {
+			@Timeout(1000)
+			@Test
+			public quick() {}
+		}
+		const result = await TestRunner.fromClasses([Subject]).run({ reporter: silentReporter });
+		Assert.equal(result.numTestsPassed, 1);
+	}
+
+	@Test
+	public runtimeSkipReasonForEachRuntime() {
+		Assert.equal(getRuntimeSkipReason(["smoke"], true), undefined);
+		Assert.equal(getRuntimeSkipReason(["Lune"], true), undefined);
+		Assert.equal(getRuntimeSkipReason(["Roblox"], true), "Roblox only");
+		Assert.equal(getRuntimeSkipReason(["Studio"], false), undefined);
+		Assert.equal(getRuntimeSkipReason(["Lune"], false), "Lune only");
+		Assert.equal(getRuntimeSkipReason(["Lune", "Roblox"], false), undefined);
 	}
 }
 
