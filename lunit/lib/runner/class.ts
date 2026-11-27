@@ -197,7 +197,12 @@ export class TestClassRunner {
 				const methodTags = val.options.tags ?? [];
 				return !sharesOneElement(excludeTags, classTags) && !sharesOneElement(excludeTags, methodTags);
 			})
-			.filter((val) => options.filter === undefined || this.matchesFilter(val, options.filter));
+			.filter((val) => options.filter === undefined || this.matchesFilter(val, options.filter))
+			.filter(
+				(val) =>
+					options.tests === undefined ||
+					options.tests.includes(`${tostring(this.testClassConstructor)}.${val.name}`),
+			);
 
 		const focused = filtered.filter((val) => val.options.only);
 		const candidates = focused.size() > 0 ? focused : filtered;

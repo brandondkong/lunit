@@ -71,14 +71,15 @@ await new TestRunner([root]).run({
 
 `TestRunOptions`:
 
-| Field         | Type       | Notes                                                                                |
-| ------------- | ---------- | ------------------------------------------------------------------------------------ |
-| `tags`        | `string[]` | Run only tests whose tag (or class tag) overlaps these.                              |
-| `excludeTags` | `string[]` | Leave out tests whose tag (or class tag) overlaps these.                             |
-| `filter`      | `string`   | Run only tests whose `Class.method` or display name contains this text (plain text). |
-| `bail`        | `boolean`  | Stop after the first failing test. Later tests are not run or reported.              |
-| `coverage`    | `boolean`  | After the report, print line coverage. See [Coverage](/guides/coverage).             |
-| `reporter`    | `Reporter` | Override per-test and per-run callbacks. See [Reporter](#reporter).                  |
+| Field         | Type       | Notes                                                                                          |
+| ------------- | ---------- | ---------------------------------------------------------------------------------------------- |
+| `tags`        | `string[]` | Run only tests whose tag (or class tag) overlaps these.                                        |
+| `excludeTags` | `string[]` | Leave out tests whose tag (or class tag) overlaps these.                                       |
+| `filter`      | `string`   | Run only tests whose `Class.method` or display name contains this text (plain text).           |
+| `tests`       | `string[]` | Run only these tests, by exact `Class.method` name. Every `@Each` row of a listed method runs. |
+| `bail`        | `boolean`  | Stop after the first failing test. Later tests are not run or reported.                        |
+| `coverage`    | `boolean`  | After the report, print line coverage. See [Coverage](/guides/coverage).                       |
+| `reporter`    | `Reporter` | Override per-test and per-run callbacks. See [Reporter](#reporter).                            |
 
 With `tags`, `excludeTags` or `filter` set, classes left with no tests are not
 in `TestRunResult.tests`.

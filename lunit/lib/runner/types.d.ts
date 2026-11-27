@@ -16,6 +16,11 @@ export type TestRunOptions = {
 	 * display names set with `@DisplayName` match too. Case-sensitive.
 	 */
 	filter?: string;
+	/**
+	 * Run only these tests, by exact `Class.method` name. Every `@Each` row of a
+	 * listed method runs. Combines with the other filters.
+	 */
+	tests?: string[];
 	/** Stop after the first failing test. Tests after it are not run or reported. */
 	bail?: boolean;
 	/**

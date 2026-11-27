@@ -115,7 +115,10 @@ export class TestRunner {
 
 	private isFiltered(options: TestRunOptions): boolean {
 		return (
-			options.filter !== undefined || (options.tags?.size() ?? 0) > 0 || (options.excludeTags?.size() ?? 0) > 0
+			options.filter !== undefined ||
+			options.tests !== undefined ||
+			(options.tags?.size() ?? 0) > 0 ||
+			(options.excludeTags?.size() ?? 0) > 0
 		);
 	}
 

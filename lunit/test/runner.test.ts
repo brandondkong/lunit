@@ -531,6 +531,28 @@ class TestRunnerApi {
 			Assert.notUndefined((Lunit as unknown as Record<string, unknown>)[name], `${name} is not exported`);
 		}
 	}
+
+	@Test
+	public async testsOptionRunsExactNames() {
+		class Shop {
+			@Test
+			public buy() {}
+
+			@Test
+			public buyMany() {}
+		}
+		class Other {
+			@Test
+			public buy() {}
+		}
+		const result = await TestRunner.fromClasses([Shop, Other]).run({
+			tests: ["Shop.buy"],
+			reporter: silentReporter,
+		});
+		Assert.equal(result.numTests, 1);
+		Assert.equal(result.tests.get(Shop)!.tests[0].method.name, "buy");
+		Assert.equal(result.tests.get(Other), undefined);
+	}
 }
 
 export = TestRunnerApi;
