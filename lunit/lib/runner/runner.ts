@@ -1,6 +1,6 @@
 import { getDescendantsOfType } from "../../utils/instance";
 
-import { TestClassConstructor, TestRunOptions, Constructor, TestRunResult, BaseTestRunResult } from "./types";
+import { TestClassConstructor, TestRunOptions, Constructor, TestRunResult, BaseTestRunResult, TestPlan } from "./types";
 import { getTestSummary } from "../reporter/printer";
 import { TestClassRunner } from "./class";
 import { DEFAULT_ORDER } from "../shared/constants";
@@ -90,6 +90,35 @@ export class TestRunner {
 		this.testClasses.push(new TestClassRunner(ctor));
 	}
 
+	/**
+	 * Lists the classes and tests that `run` would run with the same options,
+	 * without running anything: display names, tags, `@Each` rows and skip
+	 * reasons. Editors and plugins use it to show a test tree.
+	 */
+	public describe(options: TestRunOptions = {}): TestPlan {
+		const plan: TestPlan = { classes: [], numTests: 0 };
+		for (const testClass of this.getClassesToRun()) {
+			const described = testClass.describe(options);
+			if (this.isFiltered(options) && described.tests.size() === 0) continue;
+			plan.classes.push(described);
+			for (const test of described.tests) plan.numTests += math.max(1, test.cases.size());
+		}
+		return plan;
+	}
+
+	private getClassesToRun(): TestClassRunner[] {
+		const focused = this.testClasses.filter((c) => c.getMetadata().only);
+		return (focused.size() > 0 ? focused : this.testClasses).sort(
+			(a, b) => (a.getMetadata().order ?? DEFAULT_ORDER) < (b.getMetadata().order ?? DEFAULT_ORDER),
+		);
+	}
+
+	private isFiltered(options: TestRunOptions): boolean {
+		return (
+			options.filter !== undefined || (options.tags?.size() ?? 0) > 0 || (options.excludeTags?.size() ?? 0) > 0
+		);
+	}
+
 	public async run(options: TestRunOptions = {}): Promise<TestRunResult> {
 		const { reporter = {} } = options;
 		const getReport = reporter.getReport ?? getTestSummary;
@@ -105,13 +134,8 @@ export class TestRunner {
 		};
 		// REPORTER:onRunStart
 		reporter.onRunStart?.();
-		const focused = this.testClasses.filter((c) => c.getMetadata().only);
-		const classesToRun = (focused.size() > 0 ? focused : this.testClasses).sort(
-			(a, b) => (a.getMetadata().order ?? DEFAULT_ORDER) < (b.getMetadata().order ?? DEFAULT_ORDER),
-		);
-		const isFiltered =
-			options.filter !== undefined || (options.tags?.size() ?? 0) > 0 || (options.excludeTags?.size() ?? 0) > 0;
-		for (const testClass of classesToRun) {
+		const isFiltered = this.isFiltered(options);
+		for (const testClass of this.getClassesToRun()) {
 			const classResults = await testClass.runTests(options);
 			// A filter can leave a class with no tests; keep it out of the report.
 			if (isFiltered && classResults.numTests === 0) continue;
