@@ -104,6 +104,8 @@ In GitHub Actions, one step installs Lune, builds and runs the tests:
 
 ## Tooling
 
+- [Lunit Studio plugin](https://docs.kong.ly/lunit/guides/studio-plugin.html): run and inspect
+  tests in Roblox Studio without pressing Play, with coverage.
 - [Lunit Test Companion](https://marketplace.visualstudio.com/items?itemName=ShaderCloud.vscode-lunit-companion)
   (VS Code, by ShaderCloud) — runs your tests from the Test Explorer, under
   Lune or in Roblox Studio.

@@ -26,6 +26,7 @@ export default defineConfig({
 					{ text: "Decorators", link: "/guides/decorators" },
 					{ text: "Running under Lune", link: "/guides/lune" },
 					{ text: "Coverage", link: "/guides/coverage" },
+					{ text: "Studio plugin", link: "/guides/studio-plugin" },
 				],
 			},
 			{ text: "API Reference", link: "/api-reference" },

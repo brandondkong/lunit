@@ -69,6 +69,23 @@ await new TestRunner([root]).run({
 });
 ```
 
+#### `describe(options?)`
+
+Lists the classes and tests that `run` would run with the same options,
+without running anything. Editors and plugins use it to show a test tree.
+
+```ts
+const plan = TestRunner.fromClasses([TestShop]).describe({ tags: ["smoke"] });
+for (const cls of plan.classes) print(cls.displayName, cls.tests.size());
+```
+
+`TestPlan` has `classes: TestPlanClass[]` and `numTests` (each `@Each` row
+counts). A `TestPlanClass` has `testClass` (the constructor, the same key as
+in `TestRunResult.tests`), `name`, `displayName`, `tags`, an optional
+`skipReason` and `tests: TestPlanTest[]`. A `TestPlanTest` has `name`,
+`displayName`, its own `tags`, `cases` (one label per `@Each` row, empty when
+not parameterized) and an optional `skipReason`.
+
 `TestRunOptions`:
 
 | Field         | Type       | Notes                                                                                          |

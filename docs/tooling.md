@@ -7,6 +7,11 @@ outline: deep
 Tools that work with Lunit. Community tools are made and maintained by their
 authors, not by the Lunit project.
 
+## Roblox Studio
+
+The [Lunit Studio plugin](/guides/studio-plugin) lists, runs and inspects
+your tests in Edit mode, with coverage. It is part of the Lunit repository.
+
 ## Editors
 
 ### Lunit Test Companion (VS Code)
