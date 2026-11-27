@@ -5,7 +5,7 @@ them in Studio against a live DataModel **or** outside Roblox under Lune
 in milliseconds — same `*.test.ts` files, same output.
 
 [![npm version](https://img.shields.io/npm/v/@rbxts/lunit.svg)](https://www.npmjs.com/package/@rbxts/lunit)
-[![CI](https://github.com/brandon-kong/lunit/actions/workflows/test.yml/badge.svg)](https://github.com/brandon-kong/lunit/actions/workflows/test.yml)
+[![CI](https://github.com/brandondkong/lunit/actions/workflows/test.yml/badge.svg)](https://github.com/brandondkong/lunit/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Docs](https://img.shields.io/badge/docs-vitepress-brightgreen.svg)](https://docs.kong.ly/lunit/)
 
@@ -94,6 +94,14 @@ Or drop it into `package.json`:
 `lunit --help` lists the options: `--filter`, `--tag`, `--exclude-tag`,
 `--bail` and more.
 
+## Tooling
+
+- [Lunit Test Companion](https://marketplace.visualstudio.com/items?itemName=ShaderCloud.vscode-lunit-companion)
+  (VS Code, by ShaderCloud) — runs your tests from the Test Explorer, under
+  Lune or in Roblox Studio.
+
+See [Tooling](https://docs.kong.ly/lunit/tooling.html) for more.
+
 ## Documentation
 
 - [Getting Started](https://docs.kong.ly/lunit/getting-started.html) — Roblox, Lune, and both.
@@ -101,6 +109,7 @@ Or drop it into `package.json`:
 - [Writing tests](https://docs.kong.ly/lunit/guides/writing-tests.html) — patterns past the basics.
 - [Running under Lune](https://docs.kong.ly/lunit/guides/lune.html) — CI, runtime gating, troubleshooting.
 - [API reference](https://docs.kong.ly/lunit/api-reference.html)
+- [Tooling](https://docs.kong.ly/lunit/tooling.html) — editor support and other tools.
 
 ## Contributing
 

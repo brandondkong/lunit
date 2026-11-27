@@ -112,24 +112,27 @@ The same `*.test.ts` files work in both runtimes. A common setup:
 - **Studio:** the server script above runs the same tests against the live
   DataModel for engine-touching cases.
 
-Some tests only make sense in one runtime — gate them with `@Skip` and the
-`Runtime` helper:
+Some tests only make sense in one runtime. Tag them with the runtime they
+need:
 
 ```ts
-import { Skip, Test, Runtime, Assert } from "@rbxts/lunit";
+import { Tag, Test } from "@rbxts/lunit";
 
 class TestRemotes {
-	@Skip(!Runtime.isRoblox(), "Roblox only")
+	@Tag("Roblox")
 	@Test
 	public remoteEventFires() {
-		// uses game.GetService(...), only runs in Studio
+		// fires a RemoteEvent, so it only runs in Roblox
 	}
 }
 
 export = TestRemotes;
 ```
 
-Under Lune this case appears as `SKIPPED`; under Roblox it runs normally.
+Under Lune this test shows as `SKIPPED (Roblox only)`. Under Roblox it runs
+normally. `@Tag("Lune")` does the opposite. For other conditions, use `@Skip`
+with the `Runtime` helper; see
+[Gating tests by runtime](/guides/lune#gating-tests-by-runtime).
 
 ## Next steps
 
@@ -140,5 +143,5 @@ Under Lune this case appears as `SKIPPED`; under Roblox it runs normally.
 
 ## Resources
 
-- [GitHub](https://github.com/brandon-kong/lunit)
+- [GitHub](https://github.com/brandondkong/lunit)
 - [npm](https://www.npmjs.com/package/@rbxts/lunit)

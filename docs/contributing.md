@@ -17,7 +17,7 @@ You need:
   `rokit install` after cloning picks up the version pinned in `rokit.toml`.
 
 ```bash
-git clone https://github.com/brandon-kong/lunit
+git clone https://github.com/brandondkong/lunit
 cd lunit
 pnpm install
 rokit install
