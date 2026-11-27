@@ -1,12 +1,3 @@
-export function getKeysFromMap<K extends defined>(map: Map<K, unknown>): K[] {
-	const res: K[] = [];
-
-	map.forEach((_, key) => {
-		res.push(key);
-	});
-	return res;
-}
-
 export function getValuesFromMap<V extends defined>(map: Map<unknown, V>): V[] {
 	const res: V[] = [];
 
