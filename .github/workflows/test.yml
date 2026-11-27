@@ -35,9 +35,52 @@ jobs:
             # Game-type project (test/) built against the packed tarball.
             - run: pnpm run test:game
 
-            # Coverage build of the same project, checked against markers in the source.
-            - run: pnpm run test:game:coverage
-
             # Lunit's own coverage, shown in the job summary.
             - run: pnpm run test:coverage
-            - run: node .github/scripts/coverage-summary.js >> "$GITHUB_STEP_SUMMARY"
+            - run: node action/coverage-summary.js >> "$GITHUB_STEP_SUMMARY"
+
+    # The GitHub Action in action/, on a runner without Lune, against the
+    # game-type project in test/.
+    action:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 10.33.0
+                  run_install: false
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 20
+                  cache: pnpm
+
+            - run: pnpm install --frozen-lockfile
+
+            # Builds Lunit and installs the packed tarball into test/.
+            - run: pnpm run install-test
+
+            - uses: ./action
+              with:
+                  working-directory: test
+
+            - uses: ./action
+              id: lunit
+              with:
+                  working-directory: test
+                  coverage: "true"
+
+            # Coverage build checked against the markers in the source.
+            - run: node check-coverage.js
+              working-directory: test
+
+            - name: Check outputs
+              env:
+                  COVERAGE: ${{ steps.lunit.outputs.coverage }}
+                  LCOV: ${{ steps.lunit.outputs.lcov-path }}
+              run: |
+                  echo "coverage=$COVERAGE lcov-path=$LCOV"
+                  test -n "$COVERAGE"
+                  test -f "$LCOV"

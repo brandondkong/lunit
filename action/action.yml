@@ -1,0 +1,113 @@
+name: Lunit
+description: Build a roblox-ts project and run its Lunit tests under Lune, with optional coverage.
+author: Brandon Kong
+branding:
+    icon: check-circle
+    color: green
+
+inputs:
+    working-directory:
+        description: Folder of the roblox-ts project (where package.json and default.project.json are).
+        default: "."
+    build:
+        description: >-
+            Command that compiles the project. Leave empty to skip the build.
+            Default: `npx rbxtsc`, or `npx rbxtsc -p tsconfig.coverage.json` when `coverage` is true.
+        default: "default"
+    coverage:
+        description: Run with --coverage, write coverage/lcov.info and add a coverage table to the job summary.
+        default: "false"
+    args:
+        description: More arguments for the lunit command, for example `--tag smoke --bail`.
+        default: ""
+    lune-version:
+        description: Lune version to install when `lune` is not on PATH.
+        default: "0.10.4"
+
+outputs:
+    coverage:
+        description: Line coverage as a percentage (e.g. `91.5`). Set only when `coverage` is true.
+        value: ${{ steps.summary.outputs.coverage }}
+    lcov-path:
+        description: Path to the lcov file. Set only when `coverage` is true.
+        value: ${{ steps.summary.outputs.lcov-path }}
+
+runs:
+    using: composite
+    steps:
+        - name: Install Lune
+          shell: bash
+          env:
+              LUNE_VERSION: ${{ inputs.lune-version }}
+          run: |
+              if command -v lune >/dev/null 2>&1; then
+                  echo "Using $(lune --version)"
+                  exit 0
+              fi
+              case "$RUNNER_OS" in
+                  Linux) os=linux ;;
+                  macOS) os=macos ;;
+                  Windows) os=windows ;;
+                  *) echo "::error::Unsupported runner OS: $RUNNER_OS"; exit 1 ;;
+              esac
+              case "$RUNNER_ARCH" in
+                  X64) arch=x86_64 ;;
+                  ARM64) arch=aarch64 ;;
+                  *) echo "::error::Unsupported runner architecture: $RUNNER_ARCH"; exit 1 ;;
+              esac
+              dir="$RUNNER_TEMP/lune-$LUNE_VERSION"
+              mkdir -p "$dir"
+              curl -fsSL -o "$dir/lune.zip" \
+                  "https://github.com/lune-org/lune/releases/download/v$LUNE_VERSION/lune-$LUNE_VERSION-$os-$arch.zip"
+              unzip -q -o "$dir/lune.zip" -d "$dir"
+              chmod +x "$dir"/lune* || true
+              echo "$dir" >> "$GITHUB_PATH"
+
+        - name: Build
+          shell: bash
+          working-directory: ${{ inputs.working-directory }}
+          env:
+              BUILD: ${{ inputs.build }}
+              COVERAGE: ${{ inputs.coverage }}
+          run: |
+              if [ "$BUILD" = "default" ]; then
+                  if [ "$COVERAGE" = "true" ]; then
+                      if [ ! -f tsconfig.coverage.json ]; then
+                          echo "::error::coverage is true, but tsconfig.coverage.json is missing. See https://docs.kong.ly/lunit/guides/coverage.html"
+                          exit 1
+                      fi
+                      BUILD="npx rbxtsc -p tsconfig.coverage.json"
+                  else
+                      BUILD="npx rbxtsc"
+                  fi
+              fi
+              if [ -n "$BUILD" ]; then
+                  echo "+ $BUILD"
+                  eval "$BUILD"
+              fi
+
+        - name: Run tests
+          shell: bash
+          working-directory: ${{ inputs.working-directory }}
+          env:
+              COVERAGE: ${{ inputs.coverage }}
+              ARGS: ${{ inputs.args }}
+          run: |
+              flags=""
+              if [ "$COVERAGE" = "true" ]; then flags="--coverage"; fi
+              eval "npx lunit $flags $ARGS"
+
+        - name: Coverage summary
+          id: summary
+          if: ${{ inputs.coverage == 'true' && !cancelled() }}
+          shell: bash
+          working-directory: ${{ inputs.working-directory }}
+          env:
+              PROJECT_DIR: ${{ inputs.working-directory }}
+          run: |
+              if [ ! -f coverage/lcov.info ]; then
+                  echo "::warning::No coverage data. Was the project built with @rbxts/lunit/transformer?"
+                  exit 0
+              fi
+              echo "lcov-path=$PROJECT_DIR/coverage/lcov.info" >> "$GITHUB_OUTPUT"
+              node "$GITHUB_ACTION_PATH/coverage-summary.js" coverage/lcov.info >> "$GITHUB_STEP_SUMMARY"

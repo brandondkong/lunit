@@ -75,6 +75,24 @@ A `package.json` script:
 
 Add `coverage/` to your `.gitignore`.
 
+## In CI
+
+The [Lunit GitHub Action](/guides/lune#github-actions) builds with
+`tsconfig.coverage.json`, runs the tests with `--coverage` and adds a
+coverage table to the job summary:
+
+```yaml
+- uses: brandondkong/lunit/action@v4
+  id: lunit
+  with:
+      coverage: true
+- run: echo "Coverage is ${{ steps.lunit.outputs.coverage }}%"
+```
+
+To upload to Codecov, pass `steps.lunit.outputs.lcov-path` to
+[codecov/codecov-action](https://github.com/codecov/codecov-action) as its
+`files` input.
+
 ## In Roblox Studio
 
 Sync the coverage build to Studio with Rojo as usual, then pass
